@@ -32,7 +32,6 @@ class TestLogseqJournalLoaderInput(unittest.TestCase):
         ]
         
         for date in invalid_dates:
-            print(date)
             with self.assertRaises(ValueError) as context:
                 _validate_date_fields(date)
             
