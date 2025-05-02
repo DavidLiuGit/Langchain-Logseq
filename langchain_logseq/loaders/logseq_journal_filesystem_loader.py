@@ -1,9 +1,9 @@
-from langchain_core.document_loaders import BaseLoader
-from langchain_core.documents import Document
 from logging import getLogger
 from os import environ
 from pathlib import Path
 
+from langchain_core.documents import Document
+from langchain_logseq.loaders import LogseqJournalLoader
 from langchain_logseq.loaders.logseq_journal_loader_input import LogseqJournalLoaderInput
 from langchain_logseq.loaders.logseq_journal_document_metadata import LogseqJournalDocumentMetadata
 import os
@@ -12,7 +12,7 @@ import os
 logger = getLogger(__name__)
 
 
-class LogseqJournalFilesystemLoader(BaseLoader):
+class LogseqJournalFilesystemLoader(LogseqJournalLoader):
     """
     Based on input, load a collection of Logseq journal files from the filesystem, as
     Langchain `Document`s.
