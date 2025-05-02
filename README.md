@@ -1,3 +1,3 @@
 # Langchain Logseq
 
-Collection of utilities for working with Logseq files.
+Collection of Langchain utilities for working with Logseq files.
