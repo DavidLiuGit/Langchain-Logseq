@@ -41,3 +41,16 @@ class LogseqJournalLoaderInput(BaseModel):
             default=1024 * 8,
         ),
     ] = 1024 * 8
+
+
+# debugging only
+if __name__ == '__main__':
+    from pprint import pprint
+    pprint(LogseqJournalLoaderInput.model_json_schema())
+
+    example = LogseqJournalLoaderInput(
+        journal_start_date="2023-01-01",
+        journal_end_date="2023-01-02",
+        max_char_length=1024 * 4,
+    )
+    print(example.model_dump())
