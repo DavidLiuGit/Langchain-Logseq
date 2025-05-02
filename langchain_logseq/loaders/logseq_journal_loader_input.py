@@ -8,6 +8,7 @@ def _validate_date_fields(value: str):
     """Validate format of date fields."""
     try:
         datetime.strptime(value, "%Y-%m-%d")
+        return value
     except ValueError:
         raise ValueError("Dates must be in YYYY-MM-DD format.")
 
