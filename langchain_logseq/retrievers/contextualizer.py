@@ -1,11 +1,34 @@
+from logging import getLogger
 from textwrap import dedent
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Optional, Self
 
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.runnables import Runnable
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+
+logger = getLogger(__name__)
+
+RETRIEVER_CONTEXTUALIZER_PROMPT_TEMPLATE = dedent("""\
+    {prompt}
+
+    Latest user input: {user_input}
+
+    {format_instructions}
+    """)
+RETRIEVER_CONTEXTUALIZER_PROMPT_TEMPLATE_WITH_CHAT_HISTORY = dedent("""\
+    {prompt}
+
+    Chat History:
+    {chat_history}
+
+    Latest user input: {user_input}
+
+    {format_instructions}
+    """)
+
 
 
 class RetrieverContextualizerProps(BaseModel):
@@ -42,6 +65,14 @@ class RetrieverContextualizerProps(BaseModel):
             default=None,
         )
     ] = None
+    
+    enable_chat_history: Annotated[
+        bool,
+        Field(
+            description="Whether to enable chat history in the prompt.",
+            default=True,
+        )
+    ] = True
 
 
 
@@ -64,24 +95,26 @@ class RetrieverContextualizer(Runnable):
         Returns:
             A Runnable chain that processes inputs according to the configuration.
         """
-        prompt_template = PromptTemplate.from_template(self.props.prompt)
-        
+        # If output schema is provided, use PydanticOutputParser
         if self.props.output_schema:
-            # If output schema is provided, use PydanticOutputParser
             self.parser = PydanticOutputParser(pydantic_object=self.props.output_schema)
-            # create a PromptTemplate wit
+            # create a PromptTemplate with partials
             self.prompt_template = PromptTemplate(
-                input_variables=["chat_history", "user_input"],
+                input_variables=["chat_history", "user_input"] if self.props.enable_chat_history else ["user_input"],
                 partial_variables={
                     "prompt": self.props.prompt,
-                    "format_instructions": self.parser.get_format_instructions,
+                    "format_instructions": self.parser.get_format_instructions(),
                 },
-                template="{prompt}\n\n{format_instructions}"
+                template=(
+                    RETRIEVER_CONTEXTUALIZER_PROMPT_TEMPLATE_WITH_CHAT_HISTORY
+                    if self.props.enable_chat_history
+                    else RETRIEVER_CONTEXTUALIZER_PROMPT_TEMPLATE
+                ),
             )
             return (self.prompt_template
                     # | (lambda x: print("Contextualizer prompt:", x) or x)      # can enable for debugging, will not fail
                     | self.props.llm
-                    # | (lambda x: print("Contextualizer output:", x) or x)
+                    # | (lambda x: print("Contextualizer LLM output:", x) or x)
                     | self.parser
                     # | (lambda x: print("Parser output:", x) or x)
                     )
@@ -90,7 +123,14 @@ class RetrieverContextualizer(Runnable):
             # Otherwise, use the LLM and extract the string content
             # This ensures we get a clean string output rather than an LLM result object
             from langchain_core.output_parsers import StrOutputParser
-            return prompt_template | self.props.llm | StrOutputParser()
+            self.prompt_template = PromptTemplate.from_template(self.props.prompt)
+            return (self.prompt_template
+                    # | (lambda x: print("Contextualizer prompt:", x) or x)      # can enable for debugging, will not fail
+                    | self.props.llm
+                    # | (lambda x: print("Contextualizer LLM output:", x) or x)
+                    | StrOutputParser()
+                    # | (lambda x: print("StrOutputParser output:", x) or x)
+            )
 
 
     def invoke(self, input: dict[str, Any], config: Optional[dict[str, Any]] = None) -> Any:

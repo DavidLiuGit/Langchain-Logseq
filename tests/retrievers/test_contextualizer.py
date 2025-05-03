@@ -177,5 +177,29 @@ class TestRetrieverContextualizer(unittest.TestCase):
         self.assertEqual(result.question, "What is the capital of France?")
 
 
+    def test_prompt_template_with_schema(self):
+        """Test that the prompt template is correctly formatted with the output schema."""
+        # Define a test output schema
+        class TestOutputSchema(BaseModel):
+            question: str = Field(description="The standalone question")
+            random: int = Field(description="A random number")
+
+        props = RetrieverContextualizerProps(
+            llm=self.mock_llm,
+            prompt="very specific prompt. {user_input} ",
+            output_schema=TestOutputSchema,
+            enable_chat_history=False,
+        )
+
+        contextualizer = RetrieverContextualizer(props)
+        prompt = contextualizer.prompt_template.format_prompt(user_input="What is Paris?").text
+
+        # Check that the prompt template is correctly formatted
+        self.assertIn("The standalone question", prompt)
+        self.assertIn("A random number", prompt)
+        self.assertIn("very specific prompt", prompt)
+        self.assertIn("What is Paris?", prompt)
+
+
 if __name__ == "__main__":
     unittest.main()
