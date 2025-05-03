@@ -1,15 +1,13 @@
 from logging import getLogger
 from typing import TYPE_CHECKING
 
+from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 
 from langchain_logseq.loaders import LogseqJournalLoader
 from langchain_logseq.retrievers import LogseqJournalRetriever
 from langchain_logseq.retrievers.contextualizer import RetrieverContextualizer
 from langchain_logseq.loaders.logseq_journal_loader_input import LogseqJournalLoaderInput
-
-if TYPE_CHECKING:
-    from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 
 
 logger = getLogger(__name__)

@@ -1,9 +1,9 @@
 from typing import Any
 
-from langchain_logseq.retrievers import LogseqJournalRetriever
+from langchain_core.document_loaders import BaseLoader
 
 
-class LogseqJournalLoader(LogseqJournalRetriever):
+class LogseqJournalLoader(BaseLoader):
     """
     Base class for loading Logseq journal files.
     """

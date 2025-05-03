@@ -1,12 +1,12 @@
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 
+from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import RunnableConfig
 
-if TYPE_CHECKING:
-    from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
+
 
 class LogseqJournalRetriever(BaseRetriever):
     """

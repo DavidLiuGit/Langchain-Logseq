@@ -1,4 +1,5 @@
-from typing import Annotated, Optional
+from textwrap import dedent
+from typing import Annotated, Any, Optional
 
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.runnables import Runnable
@@ -28,17 +29,17 @@ class RetrieverContextualizerProps(BaseModel):
         str,
         Field(
             description="The prompt to use for the LLM to transform the input into an actionable query.",
-            examples=[
-                "Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.\n\nChat History:\n{chat_history}\nFollow Up Input: {question}\nStandalone question:",
-                "Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.\n\nChat History:\n{chat_history}\nFollow Up Input: {question}\nStandalone question:",
-            ],
+            examples=["Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.\n\nChat History:\n{chat_history}\nFollow Up Input: {user_input}\nStandalone question:"],
+            default="Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.\n\nChat History:\n{chat_history}\nFollow Up Input: {user_input}\nStandalone question:",
         ),
     ]
 
+    # TODO impl validation on this schema
     output_schema: Annotated[
-        Optional[BaseModel],
+        Optional[Any],
         Field(
             description="(Optional) Structured output schema, as a Pydantic `BaseModel`. If provided, will be added to the end of the prompt.",
+            default=None,
         )
     ] = None
 
@@ -67,15 +68,40 @@ class RetrieverContextualizer(Runnable):
         
         if self.props.output_schema:
             # If output schema is provided, use PydanticOutputParser
-            parser = PydanticOutputParser(pydantic_object=self.props.output_schema)
-            format_instructions = parser.get_format_instructions()
-            # Append format instructions to the prompt
-            prompt_with_format = self.props.prompt + "\n\n" + format_instructions
-            prompt_template = PromptTemplate.from_template(prompt_with_format)
-            return prompt_template | self.props.llm | parser
+            self.parser = PydanticOutputParser(pydantic_object=self.props.output_schema)
+            # create a PromptTemplate wit
+            self.prompt_template = PromptTemplate(
+                input_variables=["chat_history", "user_input"],
+                partial_variables={
+                    "prompt": self.props.prompt,
+                    "format_instructions": self.parser.get_format_instructions,
+                },
+                template="{prompt}\n\n{format_instructions}"
+            )
+            return (self.prompt_template
+                    # | (lambda x: print("Contextualizer prompt:", x) or x)      # can enable for debugging, will not fail
+                    | self.props.llm
+                    # | (lambda x: print("Contextualizer output:", x) or x)
+                    | self.parser
+                    # | (lambda x: print("Parser output:", x) or x)
+                    )
         
         else:
             # Otherwise, use the LLM and extract the string content
             # This ensures we get a clean string output rather than an LLM result object
             from langchain_core.output_parsers import StrOutputParser
             return prompt_template | self.props.llm | StrOutputParser()
+
+
+    def invoke(self, input: dict[str, Any], config: Optional[dict[str, Any]] = None) -> Any:
+        """
+        Process the input through the chain.
+        
+        Args:
+            input: The input to process, typically containing 'question' and 'chat_history'.
+            config: Optional configuration for the chain.
+            
+        Returns:
+            The processed output, either a string or a structured object based on the output_schema.
+        """
+        return self.chain.invoke(input, config=config)
