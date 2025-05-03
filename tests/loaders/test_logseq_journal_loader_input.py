@@ -1,5 +1,4 @@
 import unittest
-from datetime import datetime
 
 from langchain_logseq.loaders.logseq_journal_loader_input import (
     LogseqJournalLoaderInput,
