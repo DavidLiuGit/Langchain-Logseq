@@ -1,12 +1,12 @@
 from logging import getLogger
 from textwrap import dedent
-from typing import Annotated, Any, Optional, Self
+from typing import Annotated, Any, Optional, Type
 
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.runnables import Runnable
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 
 logger = getLogger(__name__)
@@ -59,7 +59,7 @@ class RetrieverContextualizerProps(BaseModel):
 
     # TODO impl validation on this schema
     output_schema: Annotated[
-        Optional[Any],
+        Optional[Type[BaseModel]],
         Field(
             description="(Optional) Structured output schema, as a Pydantic `BaseModel`. If provided, will be added to the end of the prompt.",
             default=None,
@@ -86,6 +86,8 @@ class RetrieverContextualizer(Runnable):
         """Initialize with validated props."""
         self.props = props
         self.chain = self._generate_chain()
+        self._parser_type = self.parser._type
+        self._output_type = self.parser.OutputType if not self.props.output_schema else self.props.output_schema
 
 
     def _generate_chain(self) -> Runnable:
@@ -111,26 +113,21 @@ class RetrieverContextualizer(Runnable):
                     else RETRIEVER_CONTEXTUALIZER_PROMPT_TEMPLATE
                 ),
             )
-            return (self.prompt_template
-                    # | (lambda x: print("Contextualizer prompt:", x) or x)      # can enable for debugging, will not fail
-                    | self.props.llm
-                    # | (lambda x: print("Contextualizer LLM output:", x) or x)
-                    | self.parser
-                    # | (lambda x: print("Parser output:", x) or x)
-                    )
-        
+
         else:
             # Otherwise, use the LLM and extract the string content
             # This ensures we get a clean string output rather than an LLM result object
             from langchain_core.output_parsers import StrOutputParser
+            self.parser = StrOutputParser()
             self.prompt_template = PromptTemplate.from_template(self.props.prompt)
-            return (self.prompt_template
-                    # | (lambda x: print("Contextualizer prompt:", x) or x)      # can enable for debugging, will not fail
-                    | self.props.llm
-                    # | (lambda x: print("Contextualizer LLM output:", x) or x)
-                    | StrOutputParser()
-                    # | (lambda x: print("StrOutputParser output:", x) or x)
-            )
+
+        return (self.prompt_template
+                # | (lambda x: logger.debug("Contextualizer prompt:", x) or x)      # can enable for debugging, will not fail
+                | self.props.llm
+                # | (lambda x: logger.debug("Contextualizer LLM output:", x) or x)
+                | self.parser
+                # | (lambda x: logger.debug("StrOutputParser output:", x) or x)
+        )
 
 
     def invoke(self, input: dict[str, Any], config: Optional[dict[str, Any]] = None) -> Any:

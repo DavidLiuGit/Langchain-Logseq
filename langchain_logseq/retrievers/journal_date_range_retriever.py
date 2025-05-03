@@ -35,11 +35,13 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
     def _get_relevant_documents(
         self, query: str, *, run_manager: CallbackManagerForRetrieverRun
     ) -> list[Document]:
-        # determine the relevant 
+        # determine the relevant
+        pass
 
 
-    # def build_loader_input(self, query: str) -> LogseqJournalLoaderInput:
+    def build_loader_input(self, query: str) -> LogseqJournalLoaderInput:
         """
         Based on the natural-language `query`, return an instance of `LogseqJournalLoaderInput`,
         which can then be used to invoke the `LogseqJournalLoader`.
         """
+        # self.contextualizer

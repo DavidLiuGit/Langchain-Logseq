@@ -143,6 +143,7 @@ class TestRetrieverContextualizer(unittest.TestCase):
         
         # The mock LLM should return our predefined response
         self.assertEqual(result, "Standalone question: What is the capital of France?")
+        self.assertEqual(contextualizer._output_type, str)
 
 
     def test_integration_with_output_schema(self):
@@ -173,6 +174,7 @@ class TestRetrieverContextualizer(unittest.TestCase):
         result = contextualizer.invoke(test_input)
         
         # Check that the result is a TestOutputSchema instance with the expected value
+        self.assertEqual(contextualizer._output_type, TestOutputSchema)
         self.assertIsInstance(result, TestOutputSchema)
         self.assertEqual(result.question, "What is the capital of France?")
 
@@ -199,6 +201,7 @@ class TestRetrieverContextualizer(unittest.TestCase):
         self.assertIn("A random number", prompt)
         self.assertIn("very specific prompt", prompt)
         self.assertIn("What is Paris?", prompt)
+        self.assertEqual(contextualizer._output_type, TestOutputSchema)
 
 
 if __name__ == "__main__":
