@@ -1,10 +1,10 @@
 from abc import abstractmethod
-from typing import TYPE_CHECKING
+from typing import Optional
 
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
-from langchain_core.runnables import RunnableConfig
+from langchain_core.messages import BaseMessage
 
 
 
@@ -21,6 +21,7 @@ class LogseqJournalRetriever(BaseRetriever):
         query: str,
         *,
         run_manager: CallbackManagerForRetrieverRun,
+        chat_history: Optional[list[BaseMessage]] = None,
     ) -> list[Document]:
         """
         Called by `invoke`.
