@@ -13,6 +13,11 @@ dependencies = [
     "pydantic>=2.11.4",
 ]
 
+[project.optional-dependencies]
+test = [
+  "python-dotenv",
+]
+
 [tool.setuptools.packages.find]
 where = ["langchain_logseq"]
 
