@@ -2,7 +2,7 @@ import unittest
 
 from langchain_logseq.loaders.logseq_journal_loader_input import (
     LogseqJournalLoaderInput,
-    _validate_date_fields
+    _validate_date_format
 )
 
 
@@ -13,7 +13,7 @@ class TestLogseqJournalLoaderInput(unittest.TestCase):
         valid_dates = ["2023-01-01", "2025-06-09", "2022-12-31"]
         for date in valid_dates:
             # This should not raise an exception
-            result = _validate_date_fields(date)
+            result = _validate_date_format(date)
             # Function should return the input value
             self.assertEqual(result, date)
 
@@ -32,9 +32,9 @@ class TestLogseqJournalLoaderInput(unittest.TestCase):
         
         for date in invalid_dates:
             with self.assertRaises(ValueError) as context:
-                _validate_date_fields(date)
+                _validate_date_format(date)
             
-            self.assertEqual(str(context.exception), "Dates must be in YYYY-MM-DD format.")
+            self.assertEqual(str(context.exception), f"Invalid date: '{date}'. Expecting ISO-8601 format: YYYY-MM-DD")
 
 
     def test_create_valid_input(self):
@@ -72,7 +72,7 @@ class TestLogseqJournalLoaderInput(unittest.TestCase):
                 journal_end_date="2023-12-31"
             )
         
-        self.assertIn("Dates must be in YYYY-MM-DD format", str(context.exception))
+        self.assertIn("Invalid date: '01-01-2023'. Expecting ISO-8601 format: YYYY-MM-DD", str(context.exception))
 
 
     def test_create_with_invalid_end_date(self):
@@ -83,7 +83,7 @@ class TestLogseqJournalLoaderInput(unittest.TestCase):
                 journal_end_date="2023/12/31"  # Invalid format
             )
         
-        self.assertIn("Dates must be in YYYY-MM-DD format", str(context.exception))
+        self.assertIn("Invalid date: '2023/12/31'. Expecting ISO-8601 format: YYYY-MM-DD", str(context.exception))
 
 
     def test_model_validation(self):

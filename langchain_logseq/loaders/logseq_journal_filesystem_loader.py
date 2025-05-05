@@ -1,5 +1,5 @@
+from datetime import datetime
 from logging import getLogger
-from os import environ
 from pathlib import Path
 
 from langchain_core.documents import Document
@@ -17,7 +17,7 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
     Based on input, load a collection of Logseq journal files from the filesystem, as
     Langchain `Document`s.
     """
-    
+
     def __init__(
         self,
         logseq_journal_path: str,
@@ -30,7 +30,6 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
         self.logseq_journal_path = logseq_journal_path
         self._validate_logseq_journal_path()
 
-
     def load(
         self,
         input: LogseqJournalLoaderInput,
@@ -38,24 +37,20 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
         """
         Synchronously load the documents from the Logseq journal directory, according to the input.
         """
-        if input.journal_end_date < input.journal_start_date:
+        # Convert dates to datetime objects once
+        if input.start_date > input.end_date:
             raise ValueError("journal_end_date must be after journal_start_date")
-        
-        # manipulate start_date & end_date to match the filename format
-        start_date_fname = input.journal_start_date.replace("-", "_") + ".md"
-        end_date_fname = input.journal_end_date.replace("-", "_") + ".md"
 
         documents: list[Document] = []
         # TODO this glob pattern can be improved by analyzing start_date & end_date to provide fewer matches
         for path in Path(self.logseq_journal_path).glob("*.md"):
             filename = path.name
-            if self._match_journal(filename, start_date_fname, end_date_fname):
+            if self._match_journal(filename, input.start_date, input.end_date):
                 file_path = os.path.join(self.logseq_journal_path, filename)
-                with open(file_path, 'r') as file:
+                with open(file_path, "r") as file:
                     content = file.read()
                     documents.extend(self.__class__.parse_journal_markdown_file(content, filename))
         return documents
-
 
     def _validate_logseq_journal_path(self):
         """
@@ -67,7 +62,7 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
             raise ValueError(f"Logseq journal path does not exist: {self.logseq_journal_path}")
         if not os.path.isdir(self.logseq_journal_path):
             raise ValueError(f"Logseq journal path is not a directory: {self.logseq_journal_path}")
-        
+
         # verify that the directory contains files with the expected format
         files = os.listdir(self.logseq_journal_path)
         if len(files) == 0:
@@ -76,12 +71,29 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
         if not len(list(files)) > 0:
             logger.warning(f"No files with .md extension found in {self.logseq_journal_path}")
 
+    def _match_journal(self, filename: str, start_date: datetime, end_date: datetime) -> bool:
+        """
+        Return `True` if journal date is between `start_date` & `end_date`.
 
-    def _match_journal(self, filename: str, start_date_fname: str, end_date_fname: str) -> bool:
-        """Return `True` if journal date is between `journal_start_date` & `journal_end_date`"""
-        return start_date_fname <= filename and filename <= end_date_fname
-    
-    
+        Args:
+            filename: The journal filename (e.g., "2025_03_27.md")
+            start_date: The start date as a datetime object
+            end_date: The end date as a datetime object
+
+        Returns:
+            bool: True if the file's date is within the range, False otherwise
+        """
+        if not filename.endswith(".md"):
+            return False
+
+        try:
+            # Convert filename to date object
+            file_date = datetime.strptime(filename[:-3], "%Y_%m_%d").date()
+            return start_date <= file_date <= end_date
+        except ValueError:
+            # If there's any issue parsing the date from filename, skip this file
+            return False
+
     @staticmethod
     def parse_journal_markdown_file(content: str, filename: str) -> list[Document]:
         """
@@ -89,7 +101,7 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
         `Document`s, and attach metadata.
         This function can potentially be augmented by calling Logseq APIs, rather than simply parsing markdown files.
         """
-        sections = content.split('\n- ')
+        sections = content.split("\n- ")
         docs = []
         for section in sections:
             if section_content := section.strip():
@@ -97,11 +109,9 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
                 # first, check that the content length (char count) is acceptable
                 # if longer than acceptable, then call recursively
                 # TODO: use self.p.max_char_count below instead
-                metadata = LogseqJournalFilesystemLoader.parse_journal_markdown_file_metadata(
-                    section_content, filename)
+                metadata = LogseqJournalFilesystemLoader.parse_journal_markdown_file_metadata(section_content, filename)
                 docs.append(Document(page_content=section_content, metadata=metadata.model_dump()))
         return docs
-
 
     @staticmethod
     def parse_journal_markdown_file_metadata(section: str, filename: str) -> LogseqJournalDocumentMetadata:
@@ -110,7 +120,7 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
         This function can potentially be augmented by calling Logseq APIs, rather than simply parsing markdown files.
         """
         # Extract date from filename
-        date_str = filename.replace('.md', '').replace('_', '-')
+        date_str = filename.replace(".md", "").replace("_", "-")
         char_count = len(section)
 
         return LogseqJournalDocumentMetadata(
@@ -119,4 +129,3 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
             journal_tags=[],
             journal_char_count=char_count,
         )
-        

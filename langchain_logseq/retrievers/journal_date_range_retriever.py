@@ -3,12 +3,11 @@ from typing import Optional
 
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
-
 from langchain_logseq.loaders import LogseqJournalLoader
 from langchain_core.messages import BaseMessage
+
 from langchain_logseq.retrievers import LogseqJournalRetriever
 from langchain_logseq.retrievers.contextualizer import RetrieverContextualizer
-# from langchain_core.runnables.config import configurable
 from langchain_logseq.loaders.logseq_journal_loader_input import LogseqJournalLoaderInput
 
 
@@ -33,7 +32,7 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
             loader (`LogseqJournalLoader`)
         """
         super().__init__()
-        
+
         if not isinstance(contextualizer, RetrieverContextualizer):
             raise TypeError("Contextualizer must be an instance of RetrieverContextualizer")
         if contextualizer._output_type != LogseqJournalLoaderInput:
@@ -43,7 +42,6 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
         if not isinstance(loader, LogseqJournalLoader):
             raise TypeError("Loader must be an instance of LogseqJournalLoader")
         self._loader = loader
-
 
     # TODO: figure out how to provide chat_history when retriever used in a chain
     def _get_relevant_documents(
@@ -56,7 +54,6 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
         loader_input = self._build_loader_input(query, chat_history or [])
         return self._loader.load(loader_input)
 
-
     def _build_loader_input(
         self,
         query: str,
@@ -65,7 +62,7 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
         """
         Based on the natural-language `query`, return an instance of `LogseqJournalLoaderInput`,
         which can then be used to invoke the `LogseqJournalLoader`.
-        Use the `RetrieverContextualizer` to do this, 
+        Use the `RetrieverContextualizer` to do this.
         """
         contextualizer_input = {
             "chat_history": chat_history,
