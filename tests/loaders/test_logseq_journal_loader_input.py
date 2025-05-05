@@ -1,9 +1,6 @@
 import unittest
 
-from langchain_logseq.loaders.logseq_journal_loader_input import (
-    LogseqJournalLoaderInput,
-    _validate_date_format
-)
+from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput, _validate_date_format
 
 
 class TestLogseqJournalLoaderInput(unittest.TestCase):
@@ -17,7 +14,6 @@ class TestLogseqJournalLoaderInput(unittest.TestCase):
             # Function should return the input value
             self.assertEqual(result, date)
 
-
     def test_validate_date_fields_invalid(self):
         """Test that _validate_date_fields rejects invalid date formats."""
         # Test with invalid date formats
@@ -25,86 +21,64 @@ class TestLogseqJournalLoaderInput(unittest.TestCase):
             "2023-02-30",  # Invalid day (February 30th doesn't exist)
             "2023-13-01",  # Invalid month (month 13 doesn't exist)
             "abcd-ef-gh",  # Not a date at all
-            "202-01-01",   # Year too short
-            "20231-01-01", # Year too long
-            "",            # Empty string
+            "202-01-01",  # Year too short
+            "20231-01-01",  # Year too long
+            "",  # Empty string
         ]
-        
+
         for date in invalid_dates:
             with self.assertRaises(ValueError) as context:
                 _validate_date_format(date)
-            
-            self.assertEqual(str(context.exception), f"Invalid date: '{date}'. Expecting ISO-8601 format: YYYY-MM-DD")
 
+            self.assertEqual(str(context.exception), f"Invalid date: '{date}'. Expecting ISO-8601 format: YYYY-MM-DD")
 
     def test_create_valid_input(self):
         """Test creating a LogseqJournalLoaderInput with valid data."""
         # Create with valid data
-        input_data = LogseqJournalLoaderInput(
-            journal_start_date="2023-01-01",
-            journal_end_date="2023-12-31"
-        )
-        
+        input_data = LogseqJournalLoaderInput(journal_start_date="2023-01-01", journal_end_date="2023-12-31")
+
         # Check that the fields are set correctly
         self.assertEqual(input_data.journal_start_date, "2023-01-01")
         self.assertEqual(input_data.journal_end_date, "2023-12-31")
         self.assertEqual(input_data.max_char_length, 8192)  # Default value
 
-
     def test_create_with_custom_max_char_length(self):
         """Test creating a LogseqJournalLoaderInput with a custom max_char_length."""
         # Create with custom max_char_length
         input_data = LogseqJournalLoaderInput(
-            journal_start_date="2023-01-01",
-            journal_end_date="2023-12-31",
-            max_char_length=4096
+            journal_start_date="2023-01-01", journal_end_date="2023-12-31", max_char_length=4096
         )
-        
+
         # Check that max_char_length is set correctly
         self.assertEqual(input_data.max_char_length, 4096)
-
 
     def test_create_with_invalid_start_date(self):
         """Test that creating with an invalid start date raises a validation error."""
         with self.assertRaises(ValueError) as context:
-            LogseqJournalLoaderInput(
-                journal_start_date="01-01-2023",  # Invalid format
-                journal_end_date="2023-12-31"
-            )
-        
-        self.assertIn("Invalid date: '01-01-2023'. Expecting ISO-8601 format: YYYY-MM-DD", str(context.exception))
+            LogseqJournalLoaderInput(journal_start_date="01-01-2023", journal_end_date="2023-12-31")  # Invalid format
 
+        self.assertIn("Invalid date: '01-01-2023'. Expecting ISO-8601 format: YYYY-MM-DD", str(context.exception))
 
     def test_create_with_invalid_end_date(self):
         """Test that creating with an invalid end date raises a validation error."""
         with self.assertRaises(ValueError) as context:
-            LogseqJournalLoaderInput(
-                journal_start_date="2023-01-01",
-                journal_end_date="2023/12/31"  # Invalid format
-            )
-        
-        self.assertIn("Invalid date: '2023/12/31'. Expecting ISO-8601 format: YYYY-MM-DD", str(context.exception))
+            LogseqJournalLoaderInput(journal_start_date="2023-01-01", journal_end_date="2023/12/31")  # Invalid format
 
+        self.assertIn("Invalid date: '2023/12/31'. Expecting ISO-8601 format: YYYY-MM-DD", str(context.exception))
 
     def test_model_validation(self):
         """Test the model validation using the model_validate method."""
         # Valid data
-        valid_data = {
-            "journal_start_date": "2023-01-01",
-            "journal_end_date": "2023-12-31"
-        }
-        
+        valid_data = {"journal_start_date": "2023-01-01", "journal_end_date": "2023-12-31"}
+
         # This should not raise an exception
         input_data = LogseqJournalLoaderInput.model_validate(valid_data)
         self.assertEqual(input_data.journal_start_date, "2023-01-01")
         self.assertEqual(input_data.journal_end_date, "2023-12-31")
-        
+
         # Invalid data
-        invalid_data = {
-            "journal_start_date": "01/01/2023",  # Invalid format
-            "journal_end_date": "2023-12-31"
-        }
-        
+        invalid_data = {"journal_start_date": "01/01/2023", "journal_end_date": "2023-12-31"}  # Invalid format
+
         # This should raise a validation error
         with self.assertRaises(ValueError):
             LogseqJournalLoaderInput.model_validate(invalid_data)

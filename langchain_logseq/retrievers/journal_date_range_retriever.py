@@ -8,7 +8,7 @@ from langchain_core.messages import BaseMessage
 
 from langchain_logseq.retrievers import LogseqJournalRetriever
 from langchain_logseq.retrievers.contextualizer import RetrieverContextualizer
-from langchain_logseq.loaders.logseq_journal_loader_input import LogseqJournalLoaderInput
+from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput
 
 
 logger = getLogger(__name__)

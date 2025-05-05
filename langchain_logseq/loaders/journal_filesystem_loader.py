@@ -4,8 +4,8 @@ from pathlib import Path
 
 from langchain_core.documents import Document
 from langchain_logseq.loaders import LogseqJournalLoader
-from langchain_logseq.loaders.logseq_journal_loader_input import LogseqJournalLoaderInput
-from langchain_logseq.loaders.logseq_journal_document_metadata import LogseqJournalDocumentMetadata
+from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput
+from langchain_logseq.loaders.journal_document_metadata import LogseqJournalDocumentMetadata
 import os
 
 

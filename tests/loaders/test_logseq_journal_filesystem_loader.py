@@ -6,9 +6,9 @@ from unittest.mock import patch, MagicMock
 
 from langchain_core.documents import Document
 
-from langchain_logseq.loaders.logseq_journal_filesystem_loader import LogseqJournalFilesystemLoader
-from langchain_logseq.loaders.logseq_journal_document_metadata import LogseqJournalDocumentMetadata
-from langchain_logseq.loaders.logseq_journal_loader_input import LogseqJournalLoaderInput
+from langchain_logseq.loaders.journal_filesystem_loader import LogseqJournalFilesystemLoader
+from langchain_logseq.loaders.journal_document_metadata import LogseqJournalDocumentMetadata
+from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput
 
 
 class TestLogseqJournalFilesystemLoader(unittest.TestCase):
@@ -51,7 +51,7 @@ class TestLogseqJournalFilesystemLoader(unittest.TestCase):
         """Test that a warning is logged when the directory is empty."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Mock the logger to capture warnings
-            with patch("langchain_logseq.loaders.logseq_journal_filesystem_loader.logger") as mock_logger:
+            with patch("langchain_logseq.loaders.journal_filesystem_loader.logger") as mock_logger:
                 LogseqJournalFilesystemLoader(temp_dir)
                 # Assert that both warnings were logged
                 expected_calls = [
@@ -69,7 +69,7 @@ class TestLogseqJournalFilesystemLoader(unittest.TestCase):
             test_file.write_text("Test content")
 
             # Mock the logger to capture warnings
-            with patch("langchain_logseq.loaders.logseq_journal_filesystem_loader.logger") as mock_logger:
+            with patch("langchain_logseq.loaders.journal_filesystem_loader.logger") as mock_logger:
                 LogseqJournalFilesystemLoader(temp_dir)
 
                 # Assert that a warning was logged
