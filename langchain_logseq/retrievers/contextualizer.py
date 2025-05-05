@@ -122,11 +122,11 @@ class RetrieverContextualizer(Runnable):
             self.prompt_template = PromptTemplate.from_template(self.props.prompt)
 
         return (self.prompt_template
-                # | (lambda x: logger.debug("Contextualizer prompt:", x) or x)      # can enable for debugging, will not fail
+                | (lambda x: logger.debug("Contextualizer prompt: {x}") or x)      # can enable for debugging, will not fail
                 | self.props.llm
-                # | (lambda x: logger.debug("Contextualizer LLM output:", x) or x)
+                | (lambda x: logger.debug("Contextualizer LLM output: {x}") or x)
                 | self.parser
-                # | (lambda x: logger.debug("StrOutputParser output:", x) or x)
+                | (lambda x: logger.info("StrOutputParser output: {x}") or x)
         )
 
 

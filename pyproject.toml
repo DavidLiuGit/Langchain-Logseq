@@ -16,6 +16,9 @@ dependencies = [
 [project.optional-dependencies]
 test = [
   "python-dotenv",
+  "boto3",
+  "boto3-stubs",
+  "langchain-aws",
 ]
 
 [tool.setuptools.packages.find]
