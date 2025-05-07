@@ -12,6 +12,13 @@ dependencies = [
     "langchain>=0.3.24",
     "pydantic>=2.11.4",
 ]
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 
 [project.optional-dependencies]
 test = [
@@ -22,7 +29,9 @@ test = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["langchain_logseq"]
+where = ["."]  # Look for packages in the root directory
+include = ["langchain_logseq*"]  # Include all packages starting with langchain_logseq
+
 
 [tool.black]
 line-length = 120
