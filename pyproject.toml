@@ -9,8 +9,8 @@ description = "LangChain helpers for working with Logseq documents"
 authors = [{ name="DL", email="v49t9zpqd@mozmail.com" }]
 license = { text = "MIT" }
 dependencies = [
-    "langchain>=0.3.24",
-    "pydantic>=2.11.4",
+    "langchain>=0.3.24,<0.4.0",
+    "pydantic>=2.11.*",
 ]
 readme = "README.md"
 requires-python = ">=3.11"
