@@ -1,6 +1,20 @@
-from typing import Any
+from pydantic import Field
+from typing import Any, Type
 
-from pgvector_template.core import BaseCorpusManager
+from pgvector_template.core import BaseCorpusManager, BaseCorpusManagerConfig, BaseDocument, BaseDocumentMetadata
+
+from langchain_logseq.models.journal_pgvector_template import JournalDocument, JournalDocumentMetadata
+
+
+class JournalCorpusManagerConfig(BaseCorpusManagerConfig):
+    """Configuration for Logseq journal `JournalCorpusManager`."""
+    
+    schema_name: str = "logseq_journal"
+    """Name of the schema to use for the corpus manager"""
+    document_cls: Type[BaseDocument] = JournalDocument
+    """Class to use for the document model"""
+    document_metadata_cls: Type[BaseDocumentMetadata] = JournalDocumentMetadata
+    """Class to use for the document metadata model"""
 
 
 class JournalCorpusManager(BaseCorpusManager):
@@ -18,6 +32,6 @@ class JournalCorpusManager(BaseCorpusManager):
         """Extract metadata from chunk content"""
         # Add some basic metadata about the chunk
         return {
-            "chunk_length": len(content),
+            "chunk_len": len(content),
             "word_count": len(content.split()),
         }

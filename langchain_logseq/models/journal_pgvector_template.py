@@ -26,10 +26,12 @@ class JournalDocumentMetadata(BaseDocumentMetadata):
     # defaults
     document_type: str = Field("logseq_journal")
 
-    # enforce ISO format for date field
+    # corpus
     date_str: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    
+    # chunk/document
     """Date in ISO format, e.g. `2025-04-20`"""
-    char_len: int = Field()
+    chunk_len: int = Field()
     """Length of the content in characters"""
     word_count: int | None = Field()
     """Length of the content in words"""
