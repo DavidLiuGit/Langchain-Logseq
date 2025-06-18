@@ -1,7 +1,8 @@
 from pgvector.sqlalchemy import Vector
+from pydantic import Field
 from sqlalchemy import Column, String
 
-from pgvector_template.core import BaseDocument
+from pgvector_template.core import BaseDocument, BaseDocumentMetadata, BaseDocumentOptionalProps
 
 
 class JournalDocument(BaseDocument):
@@ -19,4 +20,20 @@ class JournalDocument(BaseDocument):
     """Embedding vector"""
 
 
-class 
+class JournalDocumentMetadata(BaseDocumentMetadata):
+    """Metadata schema for Logseq journal `Document`s."""
+    
+    # defaults
+    document_type: str = Field("logseq_journal")
+
+    # enforce ISO format for date field
+    date_str: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    """Date in ISO format, e.g. `2025-04-20`"""
+    char_len: int = Field()
+    """Length of the content in characters"""
+    word_count: int | None = Field()
+    """Length of the content in words"""
+    references: list[str] = Field([])
+    """List of references to other Logseq documents, or journal dates"""
+    id_list: list[str] = Field([])
+    """List of UUIDs present, which are referenced by other files"""
