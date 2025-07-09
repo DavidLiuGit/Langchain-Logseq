@@ -15,6 +15,7 @@ class JournalCorpusManagerConfig(BaseCorpusManagerConfig):
     """Class to use for the document model"""
     document_metadata_cls: Type[BaseDocumentMetadata] = JournalDocumentMetadata
     """Class to use for the document metadata model"""
+    # embedding_provider: BaseEmbeddingProvider # is still required
 
 
 class JournalCorpusManager(BaseCorpusManager):
