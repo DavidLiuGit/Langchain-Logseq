@@ -1,10 +1,5 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: MIT-0
-"""Helper utilities for working with Amazon Bedrock from Python notebooks"""
-# Python Built-Ins:
 import os
 
-# External Dependencies:
 import boto3
 from botocore.config import Config
 
@@ -13,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def get_bedrock_client_from_environ():
+def get_bedrock_client_from_environ() -> boto3.client:
     """
     Create a boto3 client for Amazon Bedrock, using the access key & secret from envvars.
     Required envvars:
