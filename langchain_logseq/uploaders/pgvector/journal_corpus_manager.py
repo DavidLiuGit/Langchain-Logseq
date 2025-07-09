@@ -27,7 +27,7 @@ class JournalCorpusManager(BaseCorpusManager):
         """Split the journal file on root-level bullet points"""
         # initial version: split on root-level bullet points only, i.e. `\n-`
         split_content = content.split('\n-')
-        return [chunk for chunk in split_content if len(chunk.strip())]
+        return [chunk.strip() for chunk in split_content if len(chunk.strip())]
 
     def _extract_chunk_metadata(self, content: str) -> dict[str, Any]:
         """Extract metadata from chunk content"""
