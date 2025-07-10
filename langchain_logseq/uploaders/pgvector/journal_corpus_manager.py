@@ -8,7 +8,7 @@ from langchain_logseq.models.journal_pgvector_template import JournalDocument, J
 
 class JournalCorpusManagerConfig(BaseCorpusManagerConfig):
     """Configuration for Logseq journal `JournalCorpusManager`."""
-    
+
     schema_name: str = "logseq_journal"
     """Name of the schema to use for the corpus manager"""
     document_cls: Type[BaseDocument] = JournalDocument
@@ -25,14 +25,27 @@ class JournalCorpusManager(BaseCorpusManager):
 
     def _split_corpus(self, content: str, **kwargs) -> list[str]:
         """Split the journal file on root-level bullet points"""
-        # initial version: split on root-level bullet points only, i.e. `\n-`
-        split_content = content.split('\n-')
-        return [chunk.strip() for chunk in split_content if len(chunk.strip())]
+        split_content = content.split("\n-")
+        return [chunk.strip().removeprefix("- ") for chunk in split_content if chunk.strip()]
 
     def _extract_chunk_metadata(self, content: str) -> dict[str, Any]:
         """Extract metadata from chunk content"""
         # Add some basic metadata about the chunk
+        split_content = content.split()
         return {
             "chunk_len": len(content),
-            "word_count": len(content.split()),
+            "word_count": len(split_content),
+            "references": self._extract_chunk_references(split_content),
         }
+
+    def _extract_chunk_references(self, split_content: str) -> list[str]:
+        """
+        Extract references to other Logseq corpora, including other journals.
+        Expected to start with `#`, e.g. `#2025-07-07`, `#cookout`.
+        For example: `this is #my test #script'sfatal flaw #lol#` should match: [my, scrpt, lol]
+        """
+        references = []
+        for word in split_content:
+            if word.startswith("#"):
+                references.append(word[1:])
+        return references
