@@ -36,6 +36,7 @@ class TestJournalCorpusManager(unittest.TestCase):
                 "chunk_len": 36,
                 "word_count": 8,
                 "references": [],
+                "anchor_ids": [],
             },
         )
 
@@ -48,6 +49,7 @@ class TestJournalCorpusManager(unittest.TestCase):
                 "chunk_len": 0,
                 "word_count": 0,
                 "references": [],
+                "anchor_ids": [],
             },
         )
 
@@ -100,6 +102,7 @@ class TestJournalCorpusManager(unittest.TestCase):
                 "chunk_len": 50,
                 "word_count": 7,
                 "references": ["project-alpha", "2025-01-15"],
+                "anchor_ids": [],
             },
         )
 
@@ -112,6 +115,7 @@ class TestJournalCorpusManager(unittest.TestCase):
                 "chunk_len": 43,
                 "word_count": 5,
                 "references": ["bug-fix", "feature@v2"],
+                "anchor_ids": [],
             },
         )
 
@@ -124,6 +128,7 @@ class TestJournalCorpusManager(unittest.TestCase):
                 "chunk_len": 46,
                 "word_count": 5,
                 "references": ["docs", "team-lead"],
+                "anchor_ids": [],
             },
         )
 
@@ -136,6 +141,7 @@ class TestJournalCorpusManager(unittest.TestCase):
                 "chunk_len": 37,  # note: special chars like \t & \n only count as 1 char each
                 "word_count": 5,
                 "references": ["urgent", "meeting-notes"],
+                "anchor_ids": [],
             },
         )
 
@@ -163,3 +169,36 @@ class TestJournalCorpusManager(unittest.TestCase):
         split_content = ["#lol#", "#tag##", "#ref###"]
         result = self.corpus_manager._extract_chunk_references(split_content)
         self.assertEqual(result, ["lol", "tag", "ref"])
+
+    def test_extract_anchor_ids_single(self):
+        content = "Some text\n  id:: 686f4ac0-e43b-4a15-940a-954f55e03bea\nMore text"
+        result = self.corpus_manager._extract_anchor_ids(content)
+        self.assertEqual(result, ["686f4ac0-e43b-4a15-940a-954f55e03bea"])
+
+    def test_extract_anchor_ids_multiple(self):
+        content = "First id:: 686f4ac0-e43b-4a15-940a-954f55e03bea\nSecond id:: 12345678-1234-1234-1234-123456789abc"
+        result = self.corpus_manager._extract_anchor_ids(content)
+        self.assertEqual(result, ["686f4ac0-e43b-4a15-940a-954f55e03bea", "12345678-1234-1234-1234-123456789abc"])
+
+    def test_extract_anchor_ids_none(self):
+        content = "No anchor IDs here, just regular text"
+        result = self.corpus_manager._extract_anchor_ids(content)
+        self.assertEqual(result, [])
+
+    def test_extract_anchor_ids_with_references(self):
+        content = "Text with ((686f4ac0-e43b-4a15-940a-954f55e03bea)) reference but id:: 12345678-1234-1234-1234-123456789abc anchor"
+        result = self.corpus_manager._extract_anchor_ids(content)
+        self.assertEqual(result, ["12345678-1234-1234-1234-123456789abc"])
+
+    def test_extract_chunk_metadata_with_anchor_ids(self):
+        content = "Task with #tag\n  id:: 686f4ac0-e43b-4a15-940a-954f55e03bea"
+        result = self.corpus_manager._extract_chunk_metadata(content)
+        self.assertEqual(
+            result,
+            {
+                "chunk_len": 58,
+                "word_count": 5,
+                "references": ["tag"],
+                "anchor_ids": ["686f4ac0-e43b-4a15-940a-954f55e03bea"],
+            },
+        )

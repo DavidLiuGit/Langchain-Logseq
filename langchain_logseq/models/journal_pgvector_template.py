@@ -22,13 +22,13 @@ class JournalDocument(BaseDocument):
 
 class JournalDocumentMetadata(BaseDocumentMetadata):
     """Metadata schema for Logseq journal `Document`s."""
-    
+
     # defaults
     document_type: str = Field("logseq_journal")
 
     # corpus
     date_str: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
-    
+
     # chunk/document
     """Date in ISO format, e.g. `2025-04-20`"""
     chunk_len: int = Field()
@@ -37,5 +37,5 @@ class JournalDocumentMetadata(BaseDocumentMetadata):
     """Length of the content in words"""
     references: list[str] = Field([])
     """List of references to other Logseq documents, or journal dates"""
-    id_list: list[str] = Field([])
-    """List of UUIDs present, which are referenced by other files"""
+    anchor_ids: list[str] = Field([])
+    """Blocks in the document can have UUID anchors, which are referenced elsewhere. This is a list of all present"""

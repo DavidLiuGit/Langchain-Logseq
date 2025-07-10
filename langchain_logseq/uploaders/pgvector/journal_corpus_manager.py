@@ -36,6 +36,7 @@ class JournalCorpusManager(BaseCorpusManager):
             "chunk_len": len(content),
             "word_count": len(split_content),
             "references": self._extract_chunk_references(split_content),
+            "anchor_ids": self._extract_anchor_ids(content),
         }
 
     def _extract_chunk_references(self, split_content: str) -> list[str]:
@@ -53,3 +54,8 @@ class JournalCorpusManager(BaseCorpusManager):
                 if ref:
                     references.append(ref)
         return references
+
+    def _extract_anchor_ids(self, content: str) -> list[str]:
+        """Extract Logseq anchor IDs from content (id:: <uuid>)"""
+        import re
+        return re.findall(r'id:: ([a-f0-9-]{36})', content)
