@@ -42,10 +42,14 @@ class JournalCorpusManager(BaseCorpusManager):
         """
         Extract references to other Logseq corpora, including other journals.
         Expected to start with `#`, e.g. `#2025-07-07`, `#cookout`.
-        For example: `this is #my test #script'sfatal flaw #lol#` should match: [my, scrpt, lol]
+        Special chars !?,:'"\ break references. \ is ignored.
         """
         references = []
         for word in split_content:
             if word.startswith("#"):
-                references.append(word[1:])
+                ref = word.lstrip("#").rstrip("#").replace("\\", "")
+                for char in "!?,:'\"":
+                    ref = ref.split(char)[0]
+                if ref:
+                    references.append(ref)
         return references
