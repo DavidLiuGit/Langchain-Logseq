@@ -1,9 +1,10 @@
-from pydantic import Field
+import re
 from typing import Any, Type
 
 from pgvector_template.core import BaseCorpusManager, BaseCorpusManagerConfig, BaseDocument, BaseDocumentMetadata
+from pydantic import Field
 
-from langchain_logseq.models.journal_pgvector_template import JournalDocument, JournalDocumentMetadata
+from langchain_logseq.models.journal_pgvector import JournalDocument, JournalDocumentMetadata
 
 
 class JournalCorpusManagerConfig(BaseCorpusManagerConfig):
@@ -26,7 +27,7 @@ class JournalCorpusManager(BaseCorpusManager):
     def _split_corpus(self, content: str, **kwargs) -> list[str]:
         """Split the journal file on root-level bullet points"""
         split_content = content.split("\n-")
-        return [chunk.strip().removeprefix("- ") for chunk in split_content if chunk.strip()]
+        return [cleaned_chunk for chunk in split_content if (cleaned_chunk := chunk.strip().removeprefix("- "))]
 
     def _extract_chunk_metadata(self, content: str) -> dict[str, Any]:
         """Extract metadata from chunk content"""
@@ -57,5 +58,5 @@ class JournalCorpusManager(BaseCorpusManager):
 
     def _extract_anchor_ids(self, content: str) -> list[str]:
         """Extract Logseq anchor IDs from content (id:: <uuid>)"""
-        import re
-        return re.findall(r'id:: ([a-f0-9-]{36})', content)
+
+        return re.findall(r"id:: ([a-f0-9-]{36})", content)

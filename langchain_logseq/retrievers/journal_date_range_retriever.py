@@ -6,7 +6,7 @@ from langchain_core.documents import Document
 from langchain_logseq.loaders import LogseqJournalLoader
 from langchain_core.messages import BaseMessage
 
-from langchain_logseq.retrievers import LogseqJournalRetriever
+from langchain_logseq.retrievers.journal_retriever import LogseqJournalRetriever
 from langchain_logseq.retrievers.contextualizer import RetrieverContextualizer
 from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput
 

@@ -3,7 +3,7 @@ from logging import getLogger
 from pathlib import Path
 
 from langchain_core.documents import Document
-from langchain_logseq.loaders import LogseqJournalLoader
+from langchain_logseq.loaders.journal_loader import LogseqJournalLoader
 from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput
 from langchain_logseq.loaders.journal_document_metadata import LogseqJournalDocumentMetadata
 import os
@@ -49,7 +49,9 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
                 file_path = os.path.join(self.logseq_journal_path, filename)
                 with open(file_path, "r") as file:
                     content = file.read()
-                    documents.extend(self.__class__.parse_journal_markdown_file(content, filename))
+                    documents.extend(
+                        self.__class__.parse_journal_markdown_file(content, filename, input.enable_splitting)
+                    )
         return documents
 
     def _validate_logseq_journal_path(self):
@@ -95,13 +97,13 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
             return False
 
     @staticmethod
-    def parse_journal_markdown_file(content: str, filename: str) -> list[Document]:
+    def parse_journal_markdown_file(content: str, filename: str, enable_splitting: bool = True) -> list[Document]:
         """
         Generate `Document`s from a file's contents. If necessary, split content into digestible
         `Document`s, and attach metadata.
         This function can potentially be augmented by calling Logseq APIs, rather than simply parsing markdown files.
         """
-        sections = content.split("\n- ")
+        sections = content.split("\n- ") if enable_splitting else [content]
         docs = []
         for section in sections:
             if section_content := section.strip():

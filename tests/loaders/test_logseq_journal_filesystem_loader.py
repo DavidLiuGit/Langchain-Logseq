@@ -173,7 +173,7 @@ class TestLogseqJournalFilesystemLoader(unittest.TestCase):
             input_data = LogseqJournalLoaderInput(journal_start_date="2025-03-15", journal_end_date="2025-04-30")
 
             # Mock parse_journal_markdown_file to return different documents for each file
-            def mock_parse_side_effect(content, filename):
+            def mock_parse_side_effect(content, filename, enable_splitting=True):
                 if filename == "2025_03_27.md":
                     return [Document(page_content="March doc", metadata={"file": "march"})]
                 elif filename == "2025_04_15.md":
@@ -210,7 +210,7 @@ class TestLogseqJournalFilesystemLoader(unittest.TestCase):
             input_data = LogseqJournalLoaderInput(journal_start_date="2025-03-27", journal_end_date="2025-03-29")
 
             # Mock parse_journal_markdown_file to return a single document for each file
-            def mock_parse_side_effect(content, filename):
+            def mock_parse_side_effect(content, filename, enable_splitting=True):
                 return [Document(page_content=f"Content from {filename}", metadata={"filename": filename})]
 
             with patch.object(
@@ -286,6 +286,19 @@ class TestLogseqJournalFilesystemLoader(unittest.TestCase):
         # All documents should have the same date metadata
         for doc in docs:
             self.assertEqual(doc.metadata["journal_date"], "2025-03-27")
+
+    def test_parse_journal_markdown_file_no_splitting(self):
+        """Test parsing a markdown file with enable_splitting=False."""
+        filename = "2025_03_27.md"
+        content = "Header text\n- First bullet point\n- Second bullet point"
+
+        docs = LogseqJournalFilesystemLoader.parse_journal_markdown_file(content, filename, enable_splitting=False)
+
+        # Should create only one document when splitting is disabled
+        self.assertEqual(len(docs), 1)
+        self.assertEqual(docs[0].page_content, content)
+        self.assertEqual(docs[0].metadata["journal_date"], "2025-03-27")
+        self.assertEqual(docs[0].metadata["journal_char_count"], len(content))
 
     ###########################################################################
     ##### parse_journal_markdown_file_metadata() tests

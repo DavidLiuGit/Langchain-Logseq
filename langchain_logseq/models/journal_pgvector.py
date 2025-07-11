@@ -20,14 +20,18 @@ class JournalDocument(BaseDocument):
     """Embedding vector"""
 
 
-class JournalDocumentMetadata(BaseDocumentMetadata):
-    """Metadata schema for Logseq journal `Document`s."""
+class JournalCorpusMetadata(BaseDocumentMetadata):
+    """Metadata schema for Logseq journal corpora. Consist of 1-or-more chunks, called `Document`s."""
 
     # defaults
     document_type: str = Field("logseq_journal")
 
     # corpus
     date_str: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    
+
+class JournalDocumentMetadata(JournalCorpusMetadata):
+    """Metadata schema for Logseq journal `Document`s. 1-or-more `Document`s make up a corpus."""
 
     # chunk/document
     """Date in ISO format, e.g. `2025-04-20`"""

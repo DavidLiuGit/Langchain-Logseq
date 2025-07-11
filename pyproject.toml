@@ -23,6 +23,10 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+scripts = [
+  "python-dotenv",
+  "psycopg2-binary>=2.9.0",
+]
 test = [
   "python-dotenv",
   "boto3",

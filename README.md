@@ -1,7 +1,7 @@
 # Langchain Logseq
 Collection of Langchain utilities for working with Logseq files.
 
-
+---
 ## Components
 This section provides an overview of the components provided, listed by type
 
@@ -56,3 +56,13 @@ a corresponding `Retriever` component.
 #### Implementations
 - `LogseqJournalFilesystemLoader`
   - loads from the filesystem, where journal files are expected to be present at specified path
+
+
+---
+## Scripts
+
+### PGVector
+
+#### `upload_journal`
+
+usage: `python scripts/upload_journal_to_pgvector.py [-h] [-p PATH] from_date to_date`

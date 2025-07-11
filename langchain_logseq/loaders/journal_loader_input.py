@@ -53,6 +53,14 @@ class LogseqJournalLoaderInput(BaseModel):
             default=1024 * 8,
         ),
     ] = 1024 * 8
+    enable_splitting: Annotated [
+        bool,
+        Field(
+            description="Whether to split the journal file into multiple `Document`s.",
+            examples=[True, False],
+            default=True,
+        ),
+    ] = True
 
 
     # Private attributes that won't be included in model_dump
