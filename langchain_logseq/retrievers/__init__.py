@@ -6,6 +6,10 @@ from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.messages import BaseMessage
 
+# module exports
+from langchain_logseq.retrievers.contextualizer import *
+from langchain_logseq.retrievers.journal_date_range_retriever import *
+
 
 class LogseqJournalRetriever(BaseRetriever):
     """
