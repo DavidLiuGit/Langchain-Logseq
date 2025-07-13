@@ -22,12 +22,12 @@ class JournalDocument(BaseDocument):
 
 class JournalCorpusMetadata(BaseDocumentMetadata):
     """Metadata schema for Logseq journal corpora. Consist of 1-or-more chunks, called `Document`s."""
-
-    # defaults
-    document_type: str = Field("logseq_journal")
-
     # corpus
     date_str: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+
+    # defaults
+    document_type: str = Field(default="logseq_journal")
+    schema_version: str = Field(default="2025-07-10")
     
 
 class JournalDocumentMetadata(JournalCorpusMetadata):
@@ -39,7 +39,7 @@ class JournalDocumentMetadata(JournalCorpusMetadata):
     """Length of the content in characters"""
     word_count: int | None = Field()
     """Length of the content in words"""
-    references: list[str] = Field([])
+    references: list[str] = Field(default=[])
     """List of references to other Logseq documents, or journal dates"""
-    anchor_ids: list[str] = Field([])
+    anchor_ids: list[str] = Field(default=[])
     """Blocks in the document can have UUID anchors, which are referenced elsewhere. This is a list of all present"""

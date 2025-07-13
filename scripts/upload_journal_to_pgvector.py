@@ -132,6 +132,8 @@ def main():
             corpus_manager.insert_corpus(
                 fs_doc.page_content, corpus_md.model_dump(), optional_props, corpus_id=corpus_md.date_str
             )
+    
+    logger.info("Journal upload completed.")
 
 
 if __name__ == "__main__":

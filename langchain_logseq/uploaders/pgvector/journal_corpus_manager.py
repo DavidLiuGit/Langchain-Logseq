@@ -40,11 +40,11 @@ class JournalCorpusManager(BaseCorpusManager):
             "anchor_ids": self._extract_anchor_ids(content),
         }
 
-    def _extract_chunk_references(self, split_content: str) -> list[str]:
+    def _extract_chunk_references(self, split_content: list[str]) -> list[str]:
         """
         Extract references to other Logseq corpora, including other journals.
         Expected to start with `#`, e.g. `#2025-07-07`, `#cookout`.
-        Special chars !?,:'"\ break references. \ is ignored.
+        Special chars `!?,:'"\\` break references. `\\` is ignored.
         """
         references = []
         for word in split_content:
