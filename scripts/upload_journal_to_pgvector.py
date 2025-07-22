@@ -6,7 +6,7 @@ from logging import getLogger
 from pathlib import Path
 
 from langchain_core.documents import Document as LangchainDocument
-from pgvector_template.db import TempDocumentDatabaseManager
+from pgvector_template.db import DocumentDatabaseManager
 from pgvector_template.core import BaseDocumentOptionalProps
 
 from langchain_logseq.models.journal_pgvector import JournalDocument, JournalCorpusMetadata
@@ -100,7 +100,7 @@ def main():
 
     # set up clients for: Loader, DB, embedder
     loader = setup_journal_filesystem_loader(args)
-    db_manager = TempDocumentDatabaseManager(db_url, "logseq", [JournalDocument])
+    db_manager = DocumentDatabaseManager(db_url, "logseq", [JournalDocument])
     temp_schema_name = db_manager.setup()
     embedder = BedrockEmbeddingProvider()
 
