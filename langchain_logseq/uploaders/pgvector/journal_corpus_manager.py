@@ -29,7 +29,7 @@ class JournalCorpusManager(BaseCorpusManager):
         split_content = content.split("\n-")
         return [cleaned_chunk for chunk in split_content if (cleaned_chunk := chunk.strip().removeprefix("- "))]
 
-    def _extract_chunk_metadata(self, content: str) -> dict[str, Any]:
+    def _extract_chunk_metadata(self, content: str, **kwargs) -> dict[str, Any]:
         """Extract metadata from chunk content"""
         # Add some basic metadata about the chunk
         split_content = content.split()

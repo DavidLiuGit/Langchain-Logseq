@@ -1,8 +1,17 @@
+from typing import Type
+
 from pgvector.sqlalchemy import Vector
 from pydantic import Field
 from sqlalchemy import Column, String
 
-from pgvector_template.core import BaseDocument, BaseDocumentMetadata, BaseDocumentOptionalProps
+from pgvector_template.core import (
+    BaseDocument,
+    BaseDocumentMetadata,
+    BaseSearchClient,
+    BaseSearchClientConfig,
+    SearchQuery,
+)
+from sqlalchemy.orm import Session
 
 
 class JournalDocument(BaseDocument):
@@ -22,13 +31,14 @@ class JournalDocument(BaseDocument):
 
 class JournalCorpusMetadata(BaseDocumentMetadata):
     """Metadata schema for Logseq journal corpora. Consist of 1-or-more chunks, called `Document`s."""
+
     # corpus
     date_str: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
 
     # defaults
     document_type: str = Field(default="logseq_journal")
     schema_version: str = Field(default="2025-07-10")
-    
+
 
 class JournalDocumentMetadata(JournalCorpusMetadata):
     """Metadata schema for Logseq journal `Document`s. 1-or-more `Document`s make up a corpus."""
@@ -43,3 +53,13 @@ class JournalDocumentMetadata(JournalCorpusMetadata):
     """List of references to other Logseq documents, or journal dates"""
     anchor_ids: list[str] = Field(default=[])
     """Blocks in the document can have UUID anchors, which are referenced elsewhere. This is a list of all present"""
+
+
+class JournalSearchClientConfig(BaseSearchClientConfig):
+    """Configuration for the Logseq journal search client."""
+
+    document_cls: Type[JournalDocument] = JournalDocument
+    """The document type to use for the search client."""
+    document_metadata_cls: Type[JournalDocumentMetadata] = JournalDocumentMetadata
+    """The document metadata type to use for the search client."""
+    # embedding_provider
