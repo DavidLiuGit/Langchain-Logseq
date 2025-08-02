@@ -120,10 +120,10 @@ def main():
         filesystem_docs: list[LangchainDocument] = loader.load(loader_input)
 
         # process documents from the filesystem for upload
-
+        collection_name = f"{os.getenv('JOURNAL_COLLECTION_OWNER_NAME', 'Foo')}\'s Journal Collection"
         for fs_doc in filesystem_docs:
             corpus_md = JournalCorpusMetadata(date_str=fs_doc.metadata["journal_date"])
-            optional_props = build_db_optional_props(args, "Foo's Journal Collection", corpus_md)
+            optional_props = build_db_optional_props(args, collection_name, corpus_md)
             logger.info(
                 f"Uploading corpus with metadata={corpus_md}\n"
                 f"\toptional_props={optional_props}\n"

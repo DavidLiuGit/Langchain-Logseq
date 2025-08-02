@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import Mock, patch, MagicMock
 
 from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.documents import Document
 from pgvector_template.core import SearchQuery
 from pgvector_template.service import DocumentService
 
@@ -23,8 +24,12 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
         # Create mock search results
         self.mock_search_result1 = MagicMock()
         self.mock_search_result1.document = Mock(spec=JournalDocument)
+        self.mock_search_result1.document.content = "Test content 1"
+        self.mock_search_result1.document.document_metadata = {"date": "2024-01-01"}
         self.mock_search_result2 = MagicMock()
         self.mock_search_result2.document = Mock(spec=JournalDocument)
+        self.mock_search_result2.document.content = "Test content 2"
+        self.mock_search_result2.document.document_metadata = {"date": "2024-01-02"}
         self.mock_search_results = [self.mock_search_result1, self.mock_search_result2]
 
         # Create a mock document service
@@ -101,9 +106,14 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
             self.mock_search_query
         )
 
-        # Verify we get the documents from the search results
-        expected_documents = [self.mock_search_result1.document, self.mock_search_result2.document]
-        self.assertEqual(result, expected_documents)
+        # Verify we get LangChain Documents
+        self.assertEqual(len(result), 2)
+        self.assertIsInstance(result[0], Document)
+        self.assertIsInstance(result[1], Document)
+        self.assertEqual(result[0].page_content, "Test content 1")
+        self.assertEqual(result[0].metadata, {"date": "2024-01-01"})
+        self.assertEqual(result[1].page_content, "Test content 2")
+        self.assertEqual(result[1].metadata, {"date": "2024-01-02"})
 
     def test_get_relevant_documents_with_chat_history(self):
         """Test _get_relevant_documents with chat history."""
@@ -126,9 +136,10 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
             self.mock_search_query
         )
 
-        # Verify we get the documents from the search results
-        expected_documents = [self.mock_search_result1.document, self.mock_search_result2.document]
-        self.assertEqual(result, expected_documents)
+        # Verify we get LangChain Documents
+        self.assertEqual(len(result), 2)
+        self.assertIsInstance(result[0], Document)
+        self.assertIsInstance(result[1], Document)
 
     def test_init_with_invalid_contextualizer(self):
         """Test initialization with invalid contextualizer."""
