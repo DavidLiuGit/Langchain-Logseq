@@ -1,7 +1,12 @@
 import re
 from typing import Any, Type
 
-from pgvector_template.core import BaseCorpusManager, BaseCorpusManagerConfig, BaseDocument, BaseDocumentMetadata
+from pgvector_template.core import (
+    BaseCorpusManager,
+    BaseCorpusManagerConfig,
+    BaseDocument,
+    BaseDocumentMetadata,
+)
 from pydantic import Field
 
 from langchain_logseq.models.journal_pgvector import JournalDocument, JournalDocumentMetadata
@@ -27,7 +32,11 @@ class JournalCorpusManager(BaseCorpusManager):
     def _split_corpus(self, content: str, **kwargs) -> list[str]:
         """Split the journal file on root-level bullet points"""
         split_content = content.split("\n-")
-        return [cleaned_chunk for chunk in split_content if (cleaned_chunk := chunk.strip().removeprefix("- "))]
+        return [
+            cleaned_chunk
+            for chunk in split_content
+            if (cleaned_chunk := chunk.strip().removeprefix("-").removeprefix(" "))
+        ]
 
     def _extract_chunk_metadata(self, content: str, **kwargs) -> dict[str, Any]:
         """Extract metadata from chunk content"""

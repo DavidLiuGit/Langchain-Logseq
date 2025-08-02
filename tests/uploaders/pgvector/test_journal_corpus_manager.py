@@ -72,6 +72,21 @@ class TestJournalCorpusManagerHelpers(unittest.TestCase):
         result = self.corpus_manager._split_corpus(content)
         self.assertEqual(result, [])
 
+    def test_split_corpus_dash_without_space(self):
+        content = "First line\n-Bullet without space\n- Bullet with space"
+        result = self.corpus_manager._split_corpus(content)
+        self.assertEqual(result, ["First line", "Bullet without space", "Bullet with space"])
+
+    def test_split_corpus_multiple_spaces_after_dash(self):
+        content = "First line\n-   Multiple spaces\n-\t\tTab spaces"
+        result = self.corpus_manager._split_corpus(content)
+        self.assertEqual(result, ["First line", "Multiple spaces", "Tab spaces"])
+
+    def test_split_corpus_dash_only_variations(self):
+        content = "Text\n-\n-Valid\n-  \n-\t\n-Content"
+        result = self.corpus_manager._split_corpus(content)
+        self.assertEqual(result, ["Text", "Valid", "Content"])
+
     def test_extract_chunk_references_basic(self):
         split_content = ["this", "is", "#my", "test", "#script"]
         result = self.corpus_manager._extract_chunk_references(split_content)
