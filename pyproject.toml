@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "langchain-logseq"
-version = "0.2.2"
+version = "0.2.3"
 description = "LangChain helpers for working with Logseq documents"
 authors = [{ name="DL", email="v49t9zpqd@mozmail.com" }]
 license = { text = "MIT" }

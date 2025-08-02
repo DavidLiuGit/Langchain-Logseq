@@ -76,6 +76,7 @@ def pgvector_document_service(database_url: str):
             corpus_manager_cls=JournalCorpusManager,
         )
         document_service = DocumentService(session, doc_service_cfg)
+        # at this stage, DocumentService is provisioned but has not data in it. Can yield here, or...
 
         # upload some documents so there's something to query against
         loader = LogseqJournalFilesystemLoader("./integ-tests/test_journals")

@@ -2,6 +2,7 @@ from logging import getLogger
 from sqlalchemy.orm import Session
 
 from langchain_core.messages import BaseMessage
+from langchain_core.documents import Document
 from pgvector_template.core import SearchQuery
 from pgvector_template.service import DocumentService
 
@@ -52,12 +53,12 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
         *,
         # run_manager: CallbackManagerForRetrieverRun,
         chat_history: list[BaseMessage] | None = None,
-    ) -> list[JournalDocument]:
+    ) -> list[Document]:
         db_query = self._build_loader_input(query, chat_history or [])
         db_results = self._document_service.search_client.search(db_query)
         if self._verbose:
             logger.info(f"Retrieved {len(db_results)} documents from PGVector.")
-        return [result.document for result in db_results]
+        return [self._build_langchain_document_from_pgvector_document(result.document) for result in db_results]
 
     def _build_loader_input(
         self,
@@ -79,3 +80,14 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
         if not isinstance(db_query, SearchQuery):
             raise TypeError(f"Expected SearchQuery but got {type(db_query).__name__}")
         return db_query
+
+    def _build_langchain_document_from_pgvector_document(
+        self, pgvector_document: JournalDocument
+    ) -> Document:
+        """
+        Build a LangChain document from a PGVector document.
+        """
+        return Document(
+            page_content=pgvector_document.content,
+            metadata=pgvector_document.document_metadata,
+        )
