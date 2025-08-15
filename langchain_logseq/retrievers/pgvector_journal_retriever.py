@@ -1,5 +1,5 @@
 from logging import getLogger
-from sqlalchemy.orm import Session
+from pydantic import ValidationError
 
 from langchain_core.messages import BaseMessage
 from langchain_core.documents import Document
@@ -33,8 +33,8 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
 
         if not isinstance(contextualizer, RetrieverContextualizer):
             raise TypeError("contextualizer must be an instance of RetrieverContextualizer")
-        if contextualizer._output_type != SearchQuery:
-            raise TypeError("contextualizer._output_type must be SearchQuery")
+        if not issubclass(contextualizer._output_type, SearchQuery):
+            raise TypeError("contextualizer._output_type must be SearchQuery or a subclass")
         self._contextualizer = contextualizer
 
         if not isinstance(document_service, DocumentService):
@@ -49,7 +49,12 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
         # run_manager: CallbackManagerForRetrieverRun,
         chat_history: list[BaseMessage] | None = None,
     ) -> list[Document]:
-        db_query = self._build_loader_input(query, chat_history or [])
+        try:
+            db_query = self._build_loader_input(query, chat_history or [])
+        except (TypeError, ValidationError) as e:
+            logger.exception(f"Error building loader input: {e}")
+            return []
+
         db_results = self._document_service.search_client.search(db_query)
         if self._verbose:
             logger.info(f"Retrieved {len(db_results)} documents from PGVector.")
@@ -76,7 +81,7 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
         if self._verbose:
             logger.info(f"Contextualizer output: {db_query}")
         if not isinstance(db_query, SearchQuery):
-            raise TypeError(f"Expected SearchQuery but got {type(db_query).__name__}")
+            raise TypeError(f"Expected SearchQuery or subclass but got {type(db_query).__name__}")
         return db_query
 
     def _build_langchain_document_from_pgvector_document(

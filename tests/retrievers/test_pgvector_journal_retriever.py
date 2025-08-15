@@ -90,7 +90,9 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
             self.retriever._build_loader_input("What did I write about?")
 
         # Verify the error message
-        self.assertIn("Expected SearchQuery but got", str(context.exception))
+        self.assertIn(
+            "Expected SearchQuery or subclass but got", str(context.exception)
+        )
 
     def test_get_relevant_documents(self):
         """Test _get_relevant_documents method."""
