@@ -9,9 +9,11 @@ from pgvector_template.core import (
     BaseDocumentMetadata,
     BaseSearchClient,
     BaseSearchClientConfig,
-    SearchQuery,
 )
-from sqlalchemy.orm import Session
+from pgvector_template.models.search import (
+    SearchQuery,
+    MetadataFilter,
+)
 
 
 class JournalDocument(BaseDocument):
@@ -33,7 +35,9 @@ class JournalCorpusMetadata(BaseDocumentMetadata):
     """Metadata schema for Logseq journal corpora. Consist of 1-or-more chunks, called `Document`s."""
 
     # corpus
-    date_str: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    date_str: str = Field(
+        pattern=r"^\d{4}-\d{2}-\d{2}$", description="Date in ISO format, e.g. `2025-04-20`"
+    )
 
     # defaults
     document_type: str = Field(default="logseq_journal")
@@ -44,7 +48,6 @@ class JournalDocumentMetadata(JournalCorpusMetadata):
     """Metadata schema for Logseq journal `Document`s. 1-or-more `Document`s make up a corpus."""
 
     # chunk/document
-    """Date in ISO format, e.g. `2025-04-20`"""
     chunk_len: int = Field()
     """Length of the content in characters"""
     word_count: int | None = Field()
@@ -58,8 +61,39 @@ class JournalDocumentMetadata(JournalCorpusMetadata):
 class JournalSearchClientConfig(BaseSearchClientConfig):
     """Configuration for the Logseq journal search client."""
 
-    document_cls: Type[JournalDocument] = JournalDocument
+    document_cls: Type[BaseDocument] = JournalDocument
     """The document type to use for the search client."""
-    document_metadata_cls: Type[JournalDocumentMetadata] = JournalDocumentMetadata
+    document_metadata_cls: Type[BaseDocumentMetadata] = JournalDocumentMetadata
     """The document metadata type to use for the search client."""
     # embedding_provider
+
+
+class JournalSearchQuery(SearchQuery):
+    """
+    Standardized search query structure, specifically for searching Logseq `JournalDocument`s.
+    At least 1 search criterion is required. Types are the same as in `SearchQuery`.
+    Descriptions are customized to better suit Logseq `JournalDocument`'s.
+    """
+
+    text: str | None = None
+    """
+    String to match against using in a semantic search, i.e. using vector distance.
+    Instead of passing in a question, rephrase the question to be a string/phrase matching closer
+    to the content expected to be found.
+    """
+
+    keywords: list[str] = []
+    """
+    List of keywords to **exact-match** in a keyword search.
+    If any keywords are provided, at least 1 keyword must appear in the content,
+    so use only if certain that the word will apepar.
+    """
+
+    metadata_filters: list[MetadataFilter] = Field(
+        default=[],
+        json_schema_extra={"metadata_schema": JournalDocumentMetadata.model_json_schema()},
+    )
+    """
+    List of metadata conditions that must be matched.
+    Refer to `metadata_schema` for the expected schema, as it exists in the database.
+    """

@@ -8,12 +8,7 @@ from pgvector_template.service import DocumentService
 
 from langchain_logseq.retrievers.contextualizer import RetrieverContextualizer
 from langchain_logseq.retrievers.journal_retriever import LogseqJournalRetriever
-from langchain_logseq.models.journal_pgvector import (
-    JournalDocument,
-    JournalCorpusMetadata,
-    JournalDocumentMetadata,
-    JournalSearchClientConfig,
-)
+from langchain_logseq.models.journal_pgvector import JournalDocument
 
 
 logger = getLogger(__name__)
@@ -58,7 +53,10 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
         db_results = self._document_service.search_client.search(db_query)
         if self._verbose:
             logger.info(f"Retrieved {len(db_results)} documents from PGVector.")
-        return [self._build_langchain_document_from_pgvector_document(result.document) for result in db_results]
+        return [
+            self._build_langchain_document_from_pgvector_document(result.document)
+            for result in db_results
+        ]
 
     def _build_loader_input(
         self,

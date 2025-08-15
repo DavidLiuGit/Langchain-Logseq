@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "langchain-logseq"
-version = "0.2.4"
+version = "0.2.5"
 description = "LangChain helpers for working with Logseq documents"
 authors = [{ name="DL", email="v49t9zpqd@mozmail.com" }]
 license = { text = "MIT" }
@@ -12,7 +12,7 @@ dependencies = [
     "langchain>=0.3.24,<0.4.0",
     "pydantic>=2.11,<3.0",
 
-    "pgvector-template>=0.2.3",
+    "pgvector-template>=0.3.1",
 ]
 readme = "README.md"
 requires-python = ">=3.11"
