@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import Mock, patch, MagicMock
 
 from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from pgvector_template.core import SearchQuery
 from pgvector_template.service import DocumentService
@@ -38,6 +39,9 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
         self.mock_document_service.search_client.search = Mock(
             return_value=self.mock_search_results
         )
+
+        # Create a mock CallbackManager
+        self.mock_run_manager = Mock(spec=CallbackManagerForRetrieverRun)
 
         # Create the retriever with our mocks
         self.retriever = PGVectorJournalRetriever(
@@ -90,9 +94,7 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
             self.retriever._build_loader_input("What did I write about?")
 
         # Verify the error message
-        self.assertIn(
-            "Expected SearchQuery or subclass but got", str(context.exception)
-        )
+        self.assertIn("Expected SearchQuery or subclass but got", str(context.exception))
 
     def test_get_relevant_documents(self):
         """Test _get_relevant_documents method."""
@@ -100,7 +102,7 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
         query = "What did I write about last week?"
 
         # Execute
-        result = self.retriever._get_relevant_documents(query)
+        result = self.retriever._get_relevant_documents(query, run_manager=self.mock_run_manager)
 
         # Verify
         self.mock_contextualizer.invoke.assert_called_once()
@@ -127,7 +129,9 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
         ]
 
         # Execute
-        result = self.retriever._get_relevant_documents(query, chat_history=chat_history)
+        result = self.retriever._get_relevant_documents(
+            query, run_manager=self.mock_run_manager, chat_history=chat_history
+        )
 
         # Verify
         self.mock_contextualizer.invoke.assert_called_once()

@@ -1,5 +1,5 @@
 from logging import getLogger
-from pydantic import ValidationError
+from typing import TypeVar
 
 from langchain_core.messages import BaseMessage
 from langchain_core.documents import Document
@@ -42,30 +42,9 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
         self._document_service = document_service
         self._verbose = verbose
 
-    def _get_relevant_documents(
-        self,
-        query: str,
-        *,
-        # run_manager: CallbackManagerForRetrieverRun,
-        chat_history: list[BaseMessage] | None = None,
-    ) -> list[Document]:
-        try:
-            db_query = self._build_loader_input(query, chat_history or [])
-        except (TypeError, ValidationError) as e:
-            logger.exception(f"Error building loader input: {e}")
-            return []
-
-        db_results = self._document_service.search_client.search(db_query)
-        if self._verbose:
-            logger.info(f"Retrieved {len(db_results)} documents from PGVector.")
-        return [
-            self._build_langchain_document_from_pgvector_document(result.document)
-            for result in db_results
-        ]
-
     def _build_loader_input(
         self,
-        user_query: str,
+        query: str,
         chat_history: list[BaseMessage] = [],
     ) -> SearchQuery:
         """
@@ -75,7 +54,7 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
         """
         contextualizer_input = {
             "chat_history": chat_history,
-            "user_input": user_query,
+            "user_input": query,
         }
         db_query = self._contextualizer.invoke(contextualizer_input)
         if self._verbose:
@@ -83,6 +62,20 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
         if not isinstance(db_query, SearchQuery):
             raise TypeError(f"Expected SearchQuery or subclass but got {type(db_query).__name__}")
         return db_query
+
+    def _fetch_documents(self, loader_input: SearchQuery) -> list[Document]:
+        """
+        Return a list of `langchain_core.documents.Document`s based on the user's query
+        (and chat_history if available).
+        `load_input` shall be an instance of `SearchQuery` or a subclass, in this context.
+        """
+        db_results = self._document_service.search_client.search(loader_input)
+        if self._verbose:
+            logger.info(f"Retrieved {len(db_results)} documents from PGVector.")
+        return [
+            self._build_langchain_document_from_pgvector_document(result.document)
+            for result in db_results
+        ]
 
     def _build_langchain_document_from_pgvector_document(
         self, pgvector_document: JournalDocument

@@ -3,9 +3,8 @@ from typing import Optional
 
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
-from langchain_logseq.loaders import LogseqJournalLoader
 from langchain_core.messages import BaseMessage
-
+from langchain_logseq.loaders import LogseqJournalLoader
 from langchain_logseq.retrievers.journal_retriever import LogseqJournalRetriever
 from langchain_logseq.retrievers.contextualizer import RetrieverContextualizer
 from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput
@@ -45,28 +44,6 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
         self._loader = loader
         self._verbose = verbose
 
-    # TODO: figure out how to provide chat_history when retriever used in a chain
-    def _get_relevant_documents(
-        self,
-        query,
-        *,
-        run_manager: CallbackManagerForRetrieverRun,
-        chat_history: Optional[list[BaseMessage]] = None,
-    ) -> list[Document]:
-        # Handle case where query is passed as a dictionary (e.g., {"input": "query", "chat_history": [...]})
-        if isinstance(query, dict):
-            actual_query = query.get("input", query.get("query", ""))
-            chat_history = query.get("chat_history", chat_history)
-        else:
-            actual_query = query
-
-        logger.info(f"date_range_retriever.chat_history: {chat_history}")
-        loader_input = self._build_loader_input(actual_query, chat_history or [])
-        docs = self._loader.load(loader_input)
-        if self._verbose:
-            logger.info(f"Retrieved {len(docs)} documents")
-        return docs
-
     def _build_loader_input(
         self,
         query: str,
@@ -89,3 +66,9 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
                 f"Expected LogseqJournalLoaderInput but got {type(loader_input).__name__}"
             )
         return loader_input
+
+    def _fetch_documents(self, loader_input: LogseqJournalLoaderInput) -> list[Document]:
+        docs = self._loader.load(loader_input)
+        if self._verbose:
+            logger.info(f"Retrieved {len(docs)} documents")
+        return docs
