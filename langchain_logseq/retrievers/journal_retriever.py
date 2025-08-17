@@ -4,11 +4,10 @@ from typing import Any
 
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
+from langchain_core.exceptions import OutputParserException
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.messages import BaseMessage
 from pydantic import ValidationError
-
-from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput
 
 
 logger = getLogger(__name__)
@@ -44,23 +43,23 @@ class LogseqJournalRetriever(BaseRetriever):
 
         ```python
         query = {
-            "input": "user's latest question",
+            "user_input": "user's latest question",
             "chat_history": [("AiMessage", )]
         }
         ```
 
         Returns potentially relevant `langchain_core.documents.Document`s to answer the query.
         """
-        # Handle case where query is passed as a dictionary (e.g., {"input": "query", "chat_history": [...]})
+        # Handle case where query is passed as a dictionary (e.g., {"user_input": "query", "chat_history": [...]})
         if isinstance(query, dict):
-            actual_query = query.get("input", query.get("query", ""))
-            chat_history = chat_history or query.get("chat_history")
+            actual_query = query.get("user_input") or query.get("input") or query.get("query", "")
+            chat_history = chat_history or query.get("chat_history") or query.get("history")
         else:
             actual_query = query
 
         try:
             loader_input = self._build_loader_input(actual_query, chat_history or [])
-        except (TypeError, ValidationError) as e:
+        except (TypeError, ValidationError, OutputParserException) as e:
             logger.exception("Error building loader input")
             return []
 
