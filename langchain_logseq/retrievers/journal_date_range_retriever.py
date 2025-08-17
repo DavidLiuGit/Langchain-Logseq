@@ -48,12 +48,20 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
     # TODO: figure out how to provide chat_history when retriever used in a chain
     def _get_relevant_documents(
         self,
-        query: str,
+        query,
         *,
         run_manager: CallbackManagerForRetrieverRun,
         chat_history: Optional[list[BaseMessage]] = None,
     ) -> list[Document]:
-        loader_input = self._build_loader_input(query, chat_history or [])
+        # Handle case where query is passed as a dictionary (e.g., {"input": "query", "chat_history": [...]})
+        if isinstance(query, dict):
+            actual_query = query.get("input", query.get("query", ""))
+            chat_history = query.get("chat_history", chat_history)
+        else:
+            actual_query = query
+
+        logger.info(f"date_range_retriever.chat_history: {chat_history}")
+        loader_input = self._build_loader_input(actual_query, chat_history or [])
         docs = self._loader.load(loader_input)
         if self._verbose:
             logger.info(f"Retrieved {len(docs)} documents")
@@ -77,5 +85,7 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
         if self._verbose:
             logger.info(f"Contextualizer output: {loader_input}")
         if not isinstance(loader_input, LogseqJournalLoaderInput):
-            raise TypeError(f"Expected LogseqJournalLoaderInput but got {type(loader_input).__name__}")
+            raise TypeError(
+                f"Expected LogseqJournalLoaderInput but got {type(loader_input).__name__}"
+            )
         return loader_input

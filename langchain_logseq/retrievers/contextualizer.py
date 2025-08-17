@@ -1,3 +1,4 @@
+from datetime import datetime
 from logging import getLogger
 from textwrap import dedent
 from typing import Annotated, Any, Optional, Type
@@ -11,6 +12,7 @@ from pydantic import BaseModel, Field
 
 logger = getLogger(__name__)
 
+
 RETRIEVER_CONTEXTUALIZER_PROMPT_TEMPLATE = dedent(
     """\
     {prompt}
@@ -22,6 +24,9 @@ RETRIEVER_CONTEXTUALIZER_PROMPT_TEMPLATE = dedent(
 )
 RETRIEVER_CONTEXTUALIZER_PROMPT_TEMPLATE_WITH_CHAT_HISTORY = dedent(
     """\
+    Realtime context:
+    {realtime_context}
+
     {prompt}
 
     Chat History:
@@ -92,7 +97,9 @@ class RetrieverContextualizer(Runnable):
         self.props = props
         self.chain = self._generate_chain()
         self._parser_type = self.parser._type
-        self._output_type = self.parser.OutputType if not self.props.output_schema else self.props.output_schema
+        self._output_type = (
+            self.parser.OutputType if not self.props.output_schema else self.props.output_schema
+        )
 
     def _generate_chain(self) -> Runnable:
         """
@@ -106,8 +113,13 @@ class RetrieverContextualizer(Runnable):
             self.parser = PydanticOutputParser(pydantic_object=self.props.output_schema)
             # create a PromptTemplate with partials
             self.prompt_template = PromptTemplate(
-                input_variables=["chat_history", "user_input"] if self.props.enable_chat_history else ["user_input"],
+                input_variables=(
+                    ["chat_history", "user_input"]
+                    if self.props.enable_chat_history
+                    else ["user_input"]
+                ),
                 partial_variables={
+                    "realtime_context": self._get_realtime_context(),
                     "prompt": self.props.prompt,
                     "format_instructions": self.parser.get_format_instructions(),
                 },
@@ -122,19 +134,21 @@ class RetrieverContextualizer(Runnable):
             # Otherwise, use the LLM and extract the string content
             # This ensures we get a clean string output rather than an LLM result object
             from langchain_core.output_parsers import StrOutputParser
+
             self.parser = StrOutputParser()
             self.prompt_template = PromptTemplate.from_template(self.props.prompt)
 
+        # can enable for debugging, will not fail
         return (
             self.prompt_template
-            | (lambda x: logger.debug(f"Contextualizer prompt: {x}") or x)  # can enable for debugging, will not fail
+            | (lambda x: logger.debug(f"Contextualizer prompt: {x}") or x)
             | self.props.llm
             | (lambda x: logger.debug(f"Contextualizer LLM output: {x}") or x)
             | self.parser
             | (lambda x: logger.info(f"OutputParser output: {x}") or x)
         )
 
-    def invoke(self, input: dict[str, Any], config: Optional[dict[str, Any]] = None) -> Any:
+    def invoke(self, input: dict[str, Any], config=None, **kwargs) -> Any:
         """
         Process the input through the chain.
 
@@ -145,4 +159,12 @@ class RetrieverContextualizer(Runnable):
         Returns:
             The processed output, either a string or a structured object based on the output_schema.
         """
-        return self.chain.invoke(input, config=config)
+        return self.chain.invoke(input, config=config, **kwargs)
+
+    @staticmethod
+    def _get_realtime_context() -> str:
+        """
+        Get a string representing the realtime context of the retriever, with info such as:
+        - current datetime
+        """
+        return f"Current datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"

@@ -22,7 +22,7 @@ def retriever():
     # use a low-cost Claude model for integ testing
     llm = ChatBedrock(
         client=bedrock_client,
-        model_id="anthropic.claude-3-haiku-20240307-v1:0",
+        model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
         model_kwargs={
             "temperature": 0.3,
         },
@@ -34,8 +34,8 @@ def retriever():
         RetrieverContextualizerProps(
             llm=llm,
             prompt=(
-                "Given the user_input, and optional chat_history, create an query object based"
-                "on the schema provided, if you believe it is relevant. Do not include anything"
+                "Given the user_input, and optional chat_history, create an query object based "
+                "on the schema provided, if you believe it is relevant. Do not include anything "
                 "except for the schema, serialized as JSON. Do not answer the question directly"
             ),
             output_schema=LogseqJournalLoaderInput,
@@ -63,7 +63,7 @@ def test_retrieve_specific_date(retriever):
         AIMessage(content="It looks like you had a lot of fun on 2025-03-27"),
     ]
     query = "What did I do on the next day?"
-    documents_retrieved = retriever.invoke({"input": query, "chat_history": history})
+    documents_retrieved = retriever.invoke({"input": query, 'chat_history': history}, )
     _print_document_count(documents_retrieved, query)
     assert len(documents_retrieved) >= 1
 
@@ -92,6 +92,6 @@ def test_retrieve_date_range(retriever):
         AIMessage(content="It looks like you had a lot of fun in March 2025 with your dog"),
     ]
     query = "What did I do in the following month?"
-    documents_retrieved = retriever.invoke({"input": query, "chat_history": history})
+    documents_retrieved = retriever.invoke({"input": query}, chat_history=history)
     _print_document_count(documents_retrieved, query)
     assert len(documents_retrieved) >= 1
