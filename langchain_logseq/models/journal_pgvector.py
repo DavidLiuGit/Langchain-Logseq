@@ -7,7 +7,6 @@ from sqlalchemy import Column, String
 from pgvector_template.core import (
     BaseDocument,
     BaseDocumentMetadata,
-    BaseSearchClient,
     BaseSearchClientConfig,
 )
 from pgvector_template.models.search import (
@@ -71,7 +70,8 @@ class JournalSearchClientConfig(BaseSearchClientConfig):
 class JournalSearchQuery(SearchQuery):
     """
     Standardized search query structure, specifically for searching Logseq `JournalDocument`s.
-    At least 1 search criterion is required. Types are the same as in `SearchQuery`.
+    At least 1 search criterion is required (text, keywords, metadata_filters), but multiple are allowed.
+    Types are the same as in `SearchQuery`.
     Descriptions are customized to better suit Logseq `JournalDocument`'s.
     """
 
@@ -84,9 +84,11 @@ class JournalSearchQuery(SearchQuery):
 
     keywords: list[str] = []
     """
-    List of keywords to **exact-match** in a keyword search.
+    List of keywords to **exact-match**.
     If any keywords are provided, at least 1 keyword must appear in the content,
-    so use only if certain that the word will apepar.
+    so use only if certain that the word will appear.
+    Do not include keywords that can be covered in metadata_filters, e.g. dates, document type.
+    If you are not certain that a word will appear, try using `text` for a semantic search instead.
     """
 
     metadata_filters: list[MetadataFilter] = Field(

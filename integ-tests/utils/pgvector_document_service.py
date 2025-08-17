@@ -2,7 +2,7 @@ from logging import getLogger
 from pytest import fixture
 
 from langchain_aws import ChatBedrock
-from pgvector_template.core import SearchQuery, BaseDocumentOptionalProps
+from pgvector_template.core import BaseDocumentOptionalProps
 from pgvector_template.service import DocumentService, DocumentServiceConfig
 from pgvector_template.db import TempDocumentDatabaseManager
 
@@ -16,7 +16,12 @@ from langchain_logseq.retrievers.contextualizer import (
     RetrieverContextualizerProps,
 )
 from langchain_logseq.retrievers.pgvector_journal_retriever import PGVectorJournalRetriever
-from langchain_logseq.models.journal_pgvector import JournalDocument, JournalCorpusMetadata
+from langchain_logseq.models.journal_pgvector import (
+    JournalDocument,
+    JournalCorpusMetadata,
+    JournalDocumentMetadata,
+    JournalSearchQuery,
+)
 from langchain_logseq.uploaders.pgvector.journal_corpus_manager import JournalCorpusManager
 
 
@@ -46,7 +51,7 @@ def pgvector_journal_retriever(pgvector_document_service):
                 "on the schema provided, if you believe it is relevant. Do not include anything "
                 "except for the schema, serialized as JSON. Do not answer the question directly"
             ),
-            output_schema=SearchQuery,
+            output_schema=JournalSearchQuery,
             enable_chat_history=True,
         )
     )
@@ -74,6 +79,7 @@ def pgvector_document_service(database_url: str):
             document_cls=JournalDocument,
             embedding_provider=embedding_provider,
             corpus_manager_cls=JournalCorpusManager,
+            document_metadata_cls=JournalDocumentMetadata,
         )
         document_service = DocumentService(session, doc_service_cfg)
         # at this stage, DocumentService is provisioned but has not data in it. Can yield here, or...
