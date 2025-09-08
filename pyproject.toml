@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "langchain-logseq"
-version = "0.3.0"
+version = "0.3.2"
 description = "LangChain helpers for working with Logseq documents"
 authors = [{ name="DL", email="v49t9zpqd@mozmail.com" }]
 license = { text = "MIT" }
@@ -26,6 +26,7 @@ classifiers = [
 scripts = [
   "python-dotenv",
   "psycopg2-binary>=2.9.0",
+  "langchain-aws>=0.2.0",
 ]
 test = [
   "pytest",
@@ -33,7 +34,7 @@ test = [
   "python-dotenv",
   "boto3",
   "boto3-stubs",
-  "langchain-aws",
+  "langchain-aws>=0.2.0",
   "psycopg[binary]>=3.0.0",
 ]
 

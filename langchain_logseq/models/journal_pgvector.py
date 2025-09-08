@@ -99,3 +99,6 @@ class JournalSearchQuery(SearchQuery):
     List of metadata conditions that must be matched.
     Refer to `metadata_schema` for the expected schema, as it exists in the database.
     """
+
+    limit: int = Field(20, ge=3)
+    """Maximum number of results to return."""

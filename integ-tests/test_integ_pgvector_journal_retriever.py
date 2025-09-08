@@ -13,7 +13,7 @@ def test_retrieve_specific_date(pgvector_journal_retriever):
 
     # mock a LLM response and retrieve more documents with the history
     history = [
-        HumanMessage(content="What did I do on Mar 27?"),
+        HumanMessage(content="What did I do on Mar 27, 2025?"),
         AIMessage(content="You had several meetings and worked on the project"),
     ]
     query = "What else did I do that day?"
