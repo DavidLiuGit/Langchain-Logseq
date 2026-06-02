@@ -2,8 +2,10 @@ stages:
   - lint
   - test
   - review
+  - publish
 
 default:
+  image: python:3.11-slim
   interruptible: true
 
 workflow:
@@ -102,3 +104,18 @@ vibe-check:
     CLAUDE_THINKING_EFFORT: medium
   script:
     - vibe-check
+
+
+# ── Publish ───────────────────────────────────────────────────────────────────
+publish:
+  stage: publish
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
+      when: manual
+  interruptible: false
+  environment: pypi
+  before_script:
+    - pip install --no-cache-dir uv
+  script:
+    - uv build
+    - UV_PUBLISH_TOKEN=$PYPI_TOKEN uv publish
