@@ -1,8 +1,14 @@
 from datetime import datetime, date
 from typing import Annotated
 
-from pydantic import BaseModel, Field, AfterValidator, computed_field, PrivateAttr, model_validator
-    
+from pydantic import (
+    BaseModel,
+    Field,
+    AfterValidator,
+    computed_field,
+    PrivateAttr,
+    model_validator,
+)
 
 
 def _validate_date_format(value: str) -> str:
@@ -14,21 +20,23 @@ def _validate_date_format(value: str) -> str:
         _parse_date(value)
         return value
     except ValueError:
-        raise ValueError(f"Invalid date: '{value}'. Expecting ISO-8601 format: YYYY-MM-DD")
+        raise ValueError(
+            f"Invalid date: '{value}'. Expecting ISO-8601 format: YYYY-MM-DD"
+        )
 
 
 def _parse_date(date_str: str) -> date:
     """
     Parse a date string into a datetime.date object.
     """
-    return datetime.strptime(date_str, '%Y-%m-%d').date()
-
+    return datetime.strptime(date_str, "%Y-%m-%d").date()
 
 
 class LogseqJournalLoaderInput(BaseModel):
     """
     Input for a Logseq journal `Document` loader, to invoke a load.
     """
+
     journal_start_date: Annotated[
         str,
         Field(
@@ -53,7 +61,7 @@ class LogseqJournalLoaderInput(BaseModel):
             default=1024 * 8,
         ),
     ] = 1024 * 8
-    enable_splitting: Annotated [
+    enable_splitting: Annotated[
         bool,
         Field(
             description="Whether to split the journal file into multiple `Document`s.",
@@ -62,13 +70,12 @@ class LogseqJournalLoaderInput(BaseModel):
         ),
     ] = True
 
-
     # Private attributes that won't be included in model_dump
     _start_date: date = PrivateAttr()
     _end_date: date = PrivateAttr()
 
-    @model_validator(mode='after')
-    def _parse_dates(self) -> 'LogseqJournalLoaderInput':
+    @model_validator(mode="after")
+    def _parse_dates(self) -> "LogseqJournalLoaderInput":
         """Parse date strings into date objects after validation."""
         self._start_date = _parse_date(self.journal_start_date)
         self._end_date = _parse_date(self.journal_end_date)
@@ -88,8 +95,9 @@ class LogseqJournalLoaderInput(BaseModel):
 
 
 # debugging only
-if __name__ == '__main__':
+if __name__ == "__main__":
     from pprint import pprint
+
     pprint(LogseqJournalLoaderInput.model_json_schema())
 
     example = LogseqJournalLoaderInput(

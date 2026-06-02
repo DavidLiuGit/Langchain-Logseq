@@ -1,6 +1,5 @@
 import argparse
 import os
-import sys
 from datetime import datetime
 from logging import getLogger
 from pathlib import Path
@@ -9,9 +8,18 @@ from langchain_core.documents import Document as LangchainDocument
 from pgvector_template.db import DocumentDatabaseManager
 from pgvector_template.core import BaseDocumentOptionalProps
 
-from langchain_logseq.models.journal_pgvector import JournalDocument, JournalCorpusMetadata
-from langchain_logseq.loaders import LogseqJournalFilesystemLoader, LogseqJournalLoaderInput
-from langchain_logseq.uploaders.pgvector import JournalCorpusManager, JournalCorpusManagerConfig
+from logseq_retriever.models.journal_pgvector import (
+    JournalDocument,
+    JournalCorpusMetadata,
+)
+from logseq_retriever.loaders import (
+    LogseqJournalFilesystemLoader,
+    LogseqJournalLoaderInput,
+)
+from logseq_retriever.uploaders.pgvector import (
+    JournalCorpusManager,
+    JournalCorpusManagerConfig,
+)
 from pgvector_utils.db_util import database_url
 from utils.bedrock_embedder import BedrockEmbeddingProvider
 from utils.logging import setup_logging
@@ -47,7 +55,9 @@ def parse_args():
 
     # Validate path
     if not args.path:
-        raise ValueError("Path must be provided via -p/--path or LOGSEQ_JOURNAL_PATH env var")
+        raise ValueError(
+            "Path must be provided via -p/--path or LOGSEQ_JOURNAL_PATH env var"
+        )
 
     path = Path(args.path)
     if not path.exists() or not path.is_dir():
@@ -57,7 +67,9 @@ def parse_args():
     try:
         datetime.strptime(args.from_date, "%Y-%m-%d")
     except ValueError:
-        raise ValueError(f"Invalid from_date format: {args.from_date}. Expected YYYY-MM-DD")
+        raise ValueError(
+            f"Invalid from_date format: {args.from_date}. Expected YYYY-MM-DD"
+        )
 
     try:
         datetime.strptime(args.to_date, "%Y-%m-%d")
@@ -79,7 +91,9 @@ def setup_journal_filesystem_loader(args) -> LogseqJournalFilesystemLoader:
     return loader
 
 
-def build_db_optional_props(args, collection: str, corpus_md: JournalCorpusMetadata) -> BaseDocumentOptionalProps:
+def build_db_optional_props(
+    args, collection: str, corpus_md: JournalCorpusMetadata
+) -> BaseDocumentOptionalProps:
     # 1 table can host multiple collections of the same type
     return BaseDocumentOptionalProps(
         title=corpus_md.date_str,
@@ -107,7 +121,9 @@ def main():
     with db_manager.get_session() as session:
         corpus_manager = JournalCorpusManager(
             session,
-            JournalCorpusManagerConfig(schema_name=temp_schema_name, embedding_provider=embedder),
+            JournalCorpusManagerConfig(
+                schema_name=temp_schema_name, embedding_provider=embedder
+            ),
         )
 
         # load documents using loader
@@ -120,7 +136,9 @@ def main():
         filesystem_docs: list[LangchainDocument] = loader.load(loader_input)
 
         # process documents from the filesystem for upload
-        collection_name = f"{os.getenv('JOURNAL_COLLECTION_OWNER_NAME', 'Foo')}\'s Journal Collection"
+        collection_name = (
+            f"{os.getenv('JOURNAL_COLLECTION_OWNER_NAME', 'Foo')}'s Journal Collection"
+        )
         for fs_doc in filesystem_docs:
             corpus_md = JournalCorpusMetadata(date_str=fs_doc.metadata["journal_date"])
             optional_props = build_db_optional_props(args, collection_name, corpus_md)
@@ -130,7 +148,10 @@ def main():
                 f"\tcontent preview: '{fs_doc.page_content[:32]}'"
             )
             corpus_manager.insert_corpus(
-                fs_doc.page_content, corpus_md.model_dump(), optional_props, corpus_id=corpus_md.date_str
+                fs_doc.page_content,
+                corpus_md.model_dump(),
+                optional_props,
+                corpus_id=corpus_md.date_str,
             )
 
     logger.info("Journal upload completed.")

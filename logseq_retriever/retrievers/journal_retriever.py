@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from collections.abc import Sequence
 from logging import getLogger
 from typing import Any
 
@@ -22,18 +23,23 @@ class LogseqJournalRetriever(BaseRetriever):
 
     document_context: str = "These Documents represent journal entries. "
 
-    def retrieve(self, query: str, chat_history: list[BaseMessage] | None = None) -> list[Document]:
+    def retrieve(
+        self, query: str, chat_history: Sequence[BaseMessage] | None = None
+    ) -> list[Document]:
         """
-        Called by `invoke` to retrieve relevant documents to the query.
+        Directly retrieve documents for a query, bypassing LangChain's `invoke()` machinery.
+
+        Note: unlike `invoke()`, this method does not trigger LangSmith tracing or
+        registered callbacks. Use `invoke()` if those are needed.
         """
-        return self._get_relevant_documents(query, chat_history=chat_history)
+        return self._execute(query, chat_history or ())
 
     def _get_relevant_documents(
         self,
         query: str | dict[str, Any],
         *,
         run_manager: CallbackManagerForRetrieverRun,
-        chat_history: list[BaseMessage] | None = None,
+        chat_history: Sequence[BaseMessage] | None = None,
     ) -> list[Document]:
         """
         Called by `invoke`.
@@ -52,17 +58,25 @@ class LogseqJournalRetriever(BaseRetriever):
         """
         # Handle case where query is passed as a dictionary (e.g., {"user_input": "query", "chat_history": [...]})
         if isinstance(query, dict):
-            actual_query = query.get("user_input") or query.get("input") or query.get("query", "")
-            chat_history = chat_history or query.get("chat_history") or query.get("history")
+            actual_query = (
+                query.get("user_input") or query.get("input") or query.get("query", "")
+            )
+            chat_history = (
+                chat_history or query.get("chat_history") or query.get("history")
+            )
         else:
             actual_query = query
 
+        return self._execute(actual_query, chat_history or [])
+
+    def _execute(
+        self, query: str, chat_history: Sequence[BaseMessage]
+    ) -> list[Document]:
         try:
-            loader_input = self._build_loader_input(actual_query, chat_history or [])
-        except (TypeError, ValidationError, OutputParserException) as e:
+            loader_input = self._build_loader_input(query, chat_history)
+        except (TypeError, ValidationError, OutputParserException):
             logger.exception("Error building loader input")
             return []
-
         return self._fetch_documents(loader_input)
 
     @abstractmethod
@@ -81,7 +95,7 @@ class LogseqJournalRetriever(BaseRetriever):
     def _build_loader_input(
         self,
         query: str,
-        chat_history: list[BaseMessage] = [],
+        chat_history: Sequence[BaseMessage] = (),
     ) -> Any:
         """
         Subclasses shall impl this method.

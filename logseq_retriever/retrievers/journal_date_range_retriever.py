@@ -1,13 +1,12 @@
+from collections.abc import Sequence
 from logging import getLogger
-from typing import Optional
 
-from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage
-from langchain_logseq.loaders import LogseqJournalLoader
-from langchain_logseq.retrievers.journal_retriever import LogseqJournalRetriever
-from langchain_logseq.retrievers.contextualizer import RetrieverContextualizer
-from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput
+from logseq_retriever.loaders import LogseqJournalLoader
+from logseq_retriever.retrievers.journal_retriever import LogseqJournalRetriever
+from logseq_retriever.retrievers.contextualizer import RetrieverContextualizer
+from logseq_retriever.loaders.journal_loader_input import LogseqJournalLoaderInput
 
 
 logger = getLogger(__name__)
@@ -34,9 +33,13 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
         super().__init__()
 
         if not isinstance(contextualizer, RetrieverContextualizer):
-            raise TypeError("Contextualizer must be an instance of RetrieverContextualizer")
+            raise TypeError(
+                "Contextualizer must be an instance of RetrieverContextualizer"
+            )
         if contextualizer._output_type != LogseqJournalLoaderInput:
-            raise TypeError("Contextualizer output type must be LogseqJournalLoaderInput")
+            raise TypeError(
+                "Contextualizer output type must be LogseqJournalLoaderInput"
+            )
         self._contextualizer = contextualizer
 
         if not isinstance(loader, LogseqJournalLoader):
@@ -47,7 +50,7 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
     def _build_loader_input(
         self,
         query: str,
-        chat_history: list[BaseMessage] = [],
+        chat_history: Sequence[BaseMessage] = (),
     ) -> LogseqJournalLoaderInput:
         """
         Based on the natural-language `query`, return an instance of `LogseqJournalLoaderInput`,
@@ -67,7 +70,9 @@ class LogseqJournalDateRangeRetriever(LogseqJournalRetriever):
             )
         return loader_input
 
-    def _fetch_documents(self, loader_input: LogseqJournalLoaderInput) -> list[Document]:
+    def _fetch_documents(
+        self, loader_input: LogseqJournalLoaderInput
+    ) -> list[Document]:
         docs = self._loader.load(loader_input)
         if self._verbose:
             logger.info(f"Retrieved {len(docs)} documents")

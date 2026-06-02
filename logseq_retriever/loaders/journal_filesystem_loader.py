@@ -1,11 +1,13 @@
-from datetime import datetime
+from datetime import date, datetime
 from logging import getLogger
 from pathlib import Path
 
 from langchain_core.documents import Document
-from langchain_logseq.loaders.journal_loader import LogseqJournalLoader
-from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput
-from langchain_logseq.loaders.journal_document_metadata import LogseqJournalDocumentMetadata
+from logseq_retriever.loaders.journal_loader import LogseqJournalLoader
+from logseq_retriever.loaders.journal_loader_input import LogseqJournalLoaderInput
+from logseq_retriever.loaders.journal_document_metadata import (
+    LogseqJournalDocumentMetadata,
+)
 import os
 
 
@@ -30,7 +32,7 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
         self.logseq_journal_path = logseq_journal_path
         self._validate_logseq_journal_path()
 
-    def load(
+    def load(  # type: ignore[override]
         self,
         input: LogseqJournalLoaderInput,
     ) -> list[Document]:
@@ -50,7 +52,9 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
                 with open(file_path, "r") as file:
                     content = file.read()
                     documents.extend(
-                        self.__class__.parse_journal_markdown_file(content, filename, input.enable_splitting)
+                        self.__class__.parse_journal_markdown_file(
+                            content, filename, input.enable_splitting
+                        )
                     )
         return documents
 
@@ -61,19 +65,27 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
         """
         # verify that the path exist, and is a directory
         if not os.path.exists(self.logseq_journal_path):
-            raise ValueError(f"Logseq journal path does not exist: {self.logseq_journal_path}")
+            raise ValueError(
+                f"Logseq journal path does not exist: {self.logseq_journal_path}"
+            )
         if not os.path.isdir(self.logseq_journal_path):
-            raise ValueError(f"Logseq journal path is not a directory: {self.logseq_journal_path}")
+            raise ValueError(
+                f"Logseq journal path is not a directory: {self.logseq_journal_path}"
+            )
 
         # verify that the directory contains files with the expected format
         files = os.listdir(self.logseq_journal_path)
         if len(files) == 0:
-            logger.warning(f"Logseq journal directory is empty: {self.logseq_journal_path}")
+            logger.warning(
+                f"Logseq journal directory is empty: {self.logseq_journal_path}"
+            )
         files = Path(self.logseq_journal_path).glob("*.md")
         if not len(list(files)) > 0:
-            logger.warning(f"No files with .md extension found in {self.logseq_journal_path}")
+            logger.warning(
+                f"No files with .md extension found in {self.logseq_journal_path}"
+            )
 
-    def _match_journal(self, filename: str, start_date: datetime, end_date: datetime) -> bool:
+    def _match_journal(self, filename: str, start_date: date, end_date: date) -> bool:
         """
         Return `True` if journal date is between `start_date` & `end_date`.
 
@@ -97,7 +109,9 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
             return False
 
     @staticmethod
-    def parse_journal_markdown_file(content: str, filename: str, enable_splitting: bool = True) -> list[Document]:
+    def parse_journal_markdown_file(
+        content: str, filename: str, enable_splitting: bool = True
+    ) -> list[Document]:
         """
         Generate `Document`s from a file's contents. If necessary, split content into digestible
         `Document`s, and attach metadata.
@@ -111,12 +125,22 @@ class LogseqJournalFilesystemLoader(LogseqJournalLoader):
                 # first, check that the content length (char count) is acceptable
                 # if longer than acceptable, then call recursively
                 # TODO: use self.p.max_char_count below instead
-                metadata = LogseqJournalFilesystemLoader.parse_journal_markdown_file_metadata(section_content, filename)
-                docs.append(Document(page_content=section_content, metadata=metadata.model_dump()))
+                metadata = (
+                    LogseqJournalFilesystemLoader.parse_journal_markdown_file_metadata(
+                        section_content, filename
+                    )
+                )
+                docs.append(
+                    Document(
+                        page_content=section_content, metadata=metadata.model_dump()
+                    )
+                )
         return docs
 
     @staticmethod
-    def parse_journal_markdown_file_metadata(section: str, filename: str) -> LogseqJournalDocumentMetadata:
+    def parse_journal_markdown_file_metadata(
+        section: str, filename: str
+    ) -> LogseqJournalDocumentMetadata:
         """
         Parse metadata from a journal markdown file. Return `LogseqMarkdownDocumentMetadata`.
         This function can potentially be augmented by calling Logseq APIs, rather than simply parsing markdown files.

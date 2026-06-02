@@ -1,6 +1,7 @@
 import os
 
 import boto3
+from botocore.client import BaseClient
 from botocore.config import Config
 
 from dotenv import load_dotenv
@@ -8,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def get_bedrock_client_from_environ() -> boto3.client:
+def get_bedrock_client_from_environ() -> BaseClient:
     """
     Create a boto3 client for Amazon Bedrock, using the access key & secret from envvars.
     Required envvars:

@@ -5,11 +5,13 @@ from pathlib import Path
 
 from pgvector_template.core.embedder import BaseEmbeddingProvider
 
-from langchain_logseq.uploaders.pgvector.journal_corpus_manager import JournalCorpusManager, JournalCorpusManagerConfig
+from logseq_retriever.uploaders.pgvector.journal_corpus_manager import (
+    JournalCorpusManager,
+    JournalCorpusManagerConfig,
+)
 
 
 class TestJournalCorpusManagerHelpers(unittest.TestCase):
-
     def setUp(self):
         mock_session = Mock()
         mock_embedding_provider = Mock(spec=BaseEmbeddingProvider)
@@ -75,7 +77,9 @@ class TestJournalCorpusManagerHelpers(unittest.TestCase):
     def test_split_corpus_dash_without_space(self):
         content = "First line\n-Bullet without space\n- Bullet with space"
         result = self.corpus_manager._split_corpus(content)
-        self.assertEqual(result, ["First line", "Bullet without space", "Bullet with space"])
+        self.assertEqual(
+            result, ["First line", "Bullet without space", "Bullet with space"]
+        )
 
     def test_split_corpus_multiple_spaces_after_dash(self):
         content = "First line\n-   Multiple spaces\n-\t\tTab spaces"
@@ -165,7 +169,13 @@ class TestJournalCorpusManagerHelpers(unittest.TestCase):
         )
 
     def test_extract_chunk_references_breaking_chars(self):
-        split_content = ["#asdf?qwer", "#test!end", "#name:value", "#quote'break", '#double"quote']
+        split_content = [
+            "#asdf?qwer",
+            "#test!end",
+            "#name:value",
+            "#quote'break",
+            '#double"quote',
+        ]
         result = self.corpus_manager._extract_chunk_references(split_content)
         self.assertEqual(result, ["asdf", "test", "name", "quote", "double"])
 
@@ -197,7 +207,13 @@ class TestJournalCorpusManagerHelpers(unittest.TestCase):
     def test_extract_anchor_ids_multiple(self):
         content = "First id:: 686f4ac0-e43b-4a15-940a-954f55e03bea\nSecond id:: 12345678-1234-1234-1234-123456789abc"
         result = self.corpus_manager._extract_anchor_ids(content)
-        self.assertEqual(result, ["686f4ac0-e43b-4a15-940a-954f55e03bea", "12345678-1234-1234-1234-123456789abc"])
+        self.assertEqual(
+            result,
+            [
+                "686f4ac0-e43b-4a15-940a-954f55e03bea",
+                "12345678-1234-1234-1234-123456789abc",
+            ],
+        )
 
     def test_extract_anchor_ids_none(self):
         content = "No anchor IDs here, just regular text"
@@ -224,17 +240,28 @@ class TestJournalCorpusManagerHelpers(unittest.TestCase):
 
 
 class TestJournalCorpusManagerE2E(unittest.TestCase):
-
     def setUp(self):
         self.mock_session = MagicMock()
         self.mock_embedding_provider = Mock(spec=BaseEmbeddingProvider)
-        self.mock_embedding_provider.embed_batch.return_value = [[0.1] * 1024, [0.2] * 1024, [0.3] * 1024, [0.4] * 1024]
+        self.mock_embedding_provider.embed_batch.return_value = [
+            [0.1] * 1024,
+            [0.2] * 1024,
+            [0.3] * 1024,
+            [0.4] * 1024,
+        ]
 
-        config = JournalCorpusManagerConfig(embedding_provider=self.mock_embedding_provider)
+        config = JournalCorpusManagerConfig(
+            embedding_provider=self.mock_embedding_provider
+        )
         self.corpus_manager = JournalCorpusManager(self.mock_session, config)
 
         # Load real journal content from test file
-        test_file_path = Path(__file__).parent.parent.parent / "loaders" / "test_journals" / "2025_07_09.md"
+        test_file_path = (
+            Path(__file__).parent.parent.parent
+            / "loaders"
+            / "test_journals"
+            / "2025_07_09.md"
+        )
         with open(test_file_path, "r") as f:
             self.journal_content = f.read()
 
@@ -242,7 +269,9 @@ class TestJournalCorpusManagerE2E(unittest.TestCase):
         """Test full corpus insertion workflow with real journal content"""
         corpus_metadata = {"date_str": "2025-07-09"}
 
-        result = self.corpus_manager.insert_corpus(self.journal_content, corpus_metadata)
+        result = self.corpus_manager.insert_corpus(
+            self.journal_content, corpus_metadata
+        )
 
         # Should return number of documents inserted
         self.assertEqual(result, 4)
@@ -306,7 +335,9 @@ class TestJournalCorpusManagerE2E(unittest.TestCase):
         embeddings = [[0.1] * 1024] * len(chunks)
         corpus_metadata = {"date_str": "2025-07-09"}
 
-        result = self.corpus_manager.insert_documents(corpus_id, chunks, embeddings, corpus_metadata)
+        result = self.corpus_manager.insert_documents(
+            corpus_id, chunks, embeddings, corpus_metadata
+        )
 
         # empty top-level bullet should be excluded
         self.assertEqual(result, 4)
@@ -325,5 +356,12 @@ class TestJournalCorpusManagerE2E(unittest.TestCase):
         self.assertIsNotNone(ref_doc)
 
         # Find document with anchor ID
-        anchor_doc = next((doc for doc in added_docs if "686f4ac0-e43b-4a15-940a-954f55e03bea" in doc.content), None)
+        anchor_doc = next(
+            (
+                doc
+                for doc in added_docs
+                if "686f4ac0-e43b-4a15-940a-954f55e03bea" in doc.content
+            ),
+            None,
+        )
         self.assertIsNotNone(anchor_doc)

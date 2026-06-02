@@ -3,10 +3,17 @@ import pytest
 from langchain_aws import ChatBedrock
 from langchain_core.messages import HumanMessage, AIMessage
 
-from langchain_logseq.loaders.journal_filesystem_loader import LogseqJournalFilesystemLoader
-from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput
-from langchain_logseq.retrievers.contextualizer import RetrieverContextualizer, RetrieverContextualizerProps
-from langchain_logseq.retrievers.journal_date_range_retriever import LogseqJournalDateRangeRetriever
+from logseq_retriever.loaders.journal_filesystem_loader import (
+    LogseqJournalFilesystemLoader,
+)
+from logseq_retriever.loaders.journal_loader_input import LogseqJournalLoaderInput
+from logseq_retriever.retrievers.contextualizer import (
+    RetrieverContextualizer,
+    RetrieverContextualizerProps,
+)
+from logseq_retriever.retrievers.journal_date_range_retriever import (
+    LogseqJournalDateRangeRetriever,
+)
 from utils.api_bedrock import get_bedrock_client_from_environ
 from utils.logging import _enable_logging, _print_document_count
 
@@ -22,7 +29,7 @@ def retriever():
     # use a low-cost Claude model for integ testing
     llm = ChatBedrock(
         client=bedrock_client,
-        model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+        model="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
         model_kwargs={
             "temperature": 0.3,
         },
@@ -54,7 +61,9 @@ def test_retrieve_specific_date(retriever):
     documents_retrieved = retriever.invoke({"input": query})
     _print_document_count(documents_retrieved, query)
     assert documents_retrieved is not None
-    assert len(documents_retrieved) >= 3  # should be at least 3, since 3 top-level bullets
+    assert (
+        len(documents_retrieved) >= 3
+    )  # should be at least 3, since 3 top-level bullets
 
     # mock a LLM response (since that's out of scope for this test), and retrieve more documents with the history
     history = [
@@ -63,7 +72,9 @@ def test_retrieve_specific_date(retriever):
         AIMessage(content="It looks like you had a lot of fun on 2025-03-27"),
     ]
     query = "What did I do on the next day?"
-    documents_retrieved = retriever.invoke({"input": query, 'chat_history': history}, )
+    documents_retrieved = retriever.invoke(
+        {"input": query, "chat_history": history},
+    )
     _print_document_count(documents_retrieved, query)
     assert len(documents_retrieved) >= 1
 
@@ -89,7 +100,9 @@ def test_retrieve_date_range(retriever):
     history = [
         # intentionally obfuscate the date in the original query, to test history
         HumanMessage(content="What did I do on my dog's birthday month?"),
-        AIMessage(content="It looks like you had a lot of fun in March 2025 with your dog"),
+        AIMessage(
+            content="It looks like you had a lot of fun in March 2025 with your dog"
+        ),
     ]
     query = "What did I do in the following month?"
     documents_retrieved = retriever.invoke({"input": query}, chat_history=history)

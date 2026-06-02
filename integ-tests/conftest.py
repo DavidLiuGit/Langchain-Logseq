@@ -6,6 +6,10 @@ import os
 import pytest
 from dotenv import load_dotenv
 from pathlib import Path
+from utils.pgvector_document_service import (
+    pgvector_journal_retriever as pgvector_journal_retriever,
+    pgvector_document_service as pgvector_document_service,
+)
 
 # Get the directory where conftest.py is located, and load its .env file
 INTEG_TEST_DIR = Path(__file__).parent.absolute()
@@ -25,6 +29,3 @@ def database_url():
     if not db_url:
         pytest.skip("TEST_DATABASE_URL environment variable not set")
     return db_url
-
-# import more fixtures from utils
-from utils.pgvector_document_service import *

@@ -1,6 +1,9 @@
 import unittest
 
-from langchain_logseq.models.journal_pgvector import JournalSearchQuery, JournalDocumentMetadata
+from logseq_retriever.models.journal_pgvector import (
+    JournalSearchQuery,
+    JournalDocumentMetadata,
+)
 
 
 class TestJournalSearchQuery(unittest.TestCase):
@@ -39,8 +42,10 @@ class TestJournalSearchQuery(unittest.TestCase):
     def test_metadata_schema_field_types(self):
         """Test that metadata schema fields have correct types."""
         schema = JournalSearchQuery.model_json_schema()
-        properties = schema["properties"]["metadata_filters"]["metadata_schema"]["properties"]
-        
+        properties = schema["properties"]["metadata_filters"]["metadata_schema"][
+            "properties"
+        ]
+
         self.assertEqual(properties["date_str"]["type"], "string")
         self.assertEqual(properties["chunk_len"]["type"], "integer")
         self.assertEqual(properties["references"]["type"], "array")
@@ -50,7 +55,7 @@ class TestJournalSearchQuery(unittest.TestCase):
         """Test that metadata schema has correct required fields."""
         schema = JournalSearchQuery.model_json_schema()
         metadata_schema = schema["properties"]["metadata_filters"]["metadata_schema"]
-        
+
         required_fields = metadata_schema["required"]
         self.assertIn("date_str", required_fields)
         self.assertIn("chunk_len", required_fields)

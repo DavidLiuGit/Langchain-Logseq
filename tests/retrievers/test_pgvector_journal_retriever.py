@@ -1,15 +1,17 @@
 import unittest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, MagicMock
 
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
-from pgvector_template.core import SearchQuery
+from pgvector_template.core.search import SearchQuery
 from pgvector_template.service import DocumentService
 
-from langchain_logseq.retrievers.pgvector_journal_retriever import PGVectorJournalRetriever
-from langchain_logseq.retrievers.contextualizer import RetrieverContextualizer
-from langchain_logseq.models.journal_pgvector import JournalDocument
+from logseq_retriever.retrievers.pgvector_journal_retriever import (
+    PGVectorJournalRetriever,
+)
+from logseq_retriever.retrievers.contextualizer import RetrieverContextualizer
+from logseq_retriever.models.journal_pgvector import JournalDocument
 
 
 class TestPGVectorJournalRetriever(unittest.TestCase):
@@ -45,7 +47,8 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
 
         # Create the retriever with our mocks
         self.retriever = PGVectorJournalRetriever(
-            contextualizer=self.mock_contextualizer, document_service=self.mock_document_service
+            contextualizer=self.mock_contextualizer,
+            document_service=self.mock_document_service,
         )
 
     def test_build_loader_input_with_query_only(self):
@@ -59,7 +62,7 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
         self.mock_contextualizer.invoke.assert_called_once()
         call_args = self.mock_contextualizer.invoke.call_args[0][0]
         self.assertEqual(call_args["user_input"], query)
-        self.assertEqual(call_args["chat_history"], [])
+        self.assertEqual(call_args["chat_history"], ())
 
         # Verify the result is what we expect
         self.assertEqual(result, self.mock_search_query)
@@ -69,7 +72,9 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
         query = "What about meditation?"
         chat_history = [
             HumanMessage(content="What did I write about exercise last week?"),
-            AIMessage(content="You wrote about running on Tuesday and yoga on Thursday."),
+            AIMessage(
+                content="You wrote about running on Tuesday and yoga on Thursday."
+            ),
         ]
 
         # Call the method
@@ -94,7 +99,9 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
             self.retriever._build_loader_input("What did I write about?")
 
         # Verify the error message
-        self.assertIn("Expected SearchQuery or subclass but got", str(context.exception))
+        self.assertIn(
+            "Expected SearchQuery or subclass but got", str(context.exception)
+        )
 
     def test_get_relevant_documents(self):
         """Test _get_relevant_documents method."""
@@ -102,7 +109,9 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
         query = "What did I write about last week?"
 
         # Execute
-        result = self.retriever._get_relevant_documents(query, run_manager=self.mock_run_manager)
+        result = self.retriever._get_relevant_documents(
+            query, run_manager=self.mock_run_manager
+        )
 
         # Verify
         self.mock_contextualizer.invoke.assert_called_once()
@@ -125,7 +134,9 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
         query = "What about meditation?"
         chat_history = [
             HumanMessage(content="What did I write about exercise last week?"),
-            AIMessage(content="You wrote about running on Tuesday and yoga on Thursday."),
+            AIMessage(
+                content="You wrote about running on Tuesday and yoga on Thursday."
+            ),
         ]
 
         # Execute
@@ -156,7 +167,8 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
         # Expect TypeError when initializing with invalid contextualizer
         with self.assertRaises(TypeError) as context:
             PGVectorJournalRetriever(
-                contextualizer=invalid_contextualizer, document_service=self.mock_document_service
+                contextualizer=invalid_contextualizer,
+                document_service=self.mock_document_service,
             )
 
         self.assertIn("contextualizer._output_type must be", str(context.exception))
@@ -166,11 +178,13 @@ class TestPGVectorJournalRetriever(unittest.TestCase):
         # Expect TypeError when initializing with invalid document service
         with self.assertRaises(TypeError) as context:
             PGVectorJournalRetriever(
-                contextualizer=self.mock_contextualizer, document_service="not a DocumentService"
+                contextualizer=self.mock_contextualizer,
+                document_service="not a DocumentService",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             )
 
         self.assertIn(
-            "document_service must be an instance of DocumentService", str(context.exception)
+            "document_service must be an instance of DocumentService",
+            str(context.exception),
         )
 
 

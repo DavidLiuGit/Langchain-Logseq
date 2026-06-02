@@ -1,5 +1,5 @@
-# Langchain Logseq
-Collection of Langchain utilities for working with Logseq files.
+# Logseq Retriever
+Python library for loading and retrieving Logseq documents.
 
 ---
 ## Components

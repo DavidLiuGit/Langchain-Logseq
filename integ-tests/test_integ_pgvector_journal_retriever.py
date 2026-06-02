@@ -17,7 +17,9 @@ def test_retrieve_specific_date(pgvector_journal_retriever):
         AIMessage(content="You had several meetings and worked on the project"),
     ]
     query = "What else did I do that day?"
-    documents_retrieved = pgvector_journal_retriever.invoke({"input": query, "chat_history": history})
+    documents_retrieved = pgvector_journal_retriever.invoke(
+        {"input": query, "chat_history": history}
+    )
     _print_document_count(documents_retrieved, query)
     assert len(documents_retrieved) >= 1
 
@@ -47,10 +49,16 @@ def test_retrieve_with_complex_query(pgvector_journal_retriever):
 
     # mock a LLM response and retrieve more documents with the history
     history = [
-        HumanMessage(content="What projects was I working on in March 2025 that involved coding?"),
-        AIMessage(content="You were working on the data pipeline project and the ML model"),
+        HumanMessage(
+            content="What projects was I working on in March 2025 that involved coding?"
+        ),
+        AIMessage(
+            content="You were working on the data pipeline project and the ML model"
+        ),
     ]
     query = "Did I mention any challenges with those projects?"
-    documents_retrieved = pgvector_journal_retriever.invoke({"input": query, "chat_history": history})
+    documents_retrieved = pgvector_journal_retriever.invoke(
+        {"input": query, "chat_history": history}
+    )
     _print_document_count(documents_retrieved, query)
     assert len(documents_retrieved) >= 0

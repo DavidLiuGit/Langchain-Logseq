@@ -8,21 +8,27 @@ from pgvector_template.db import TempDocumentDatabaseManager
 
 from utils.api_bedrock import get_bedrock_client_from_environ
 from utils.bedrock_embedder import BedrockEmbeddingProvider
-from utils.logging import _enable_logging
 
-from langchain_logseq.loaders import LogseqJournalFilesystemLoader, LogseqJournalLoaderInput
-from langchain_logseq.retrievers.contextualizer import (
+from logseq_retriever.loaders import (
+    LogseqJournalFilesystemLoader,
+    LogseqJournalLoaderInput,
+)
+from logseq_retriever.retrievers.contextualizer import (
     RetrieverContextualizer,
     RetrieverContextualizerProps,
 )
-from langchain_logseq.retrievers.pgvector_journal_retriever import PGVectorJournalRetriever
-from langchain_logseq.models.journal_pgvector import (
+from logseq_retriever.retrievers.pgvector_journal_retriever import (
+    PGVectorJournalRetriever,
+)
+from logseq_retriever.models.journal_pgvector import (
     JournalDocument,
     JournalCorpusMetadata,
     JournalDocumentMetadata,
     JournalSearchQuery,
 )
-from langchain_logseq.uploaders.pgvector.journal_corpus_manager import JournalCorpusManager
+from logseq_retriever.uploaders.pgvector.journal_corpus_manager import (
+    JournalCorpusManager,
+)
 
 
 logger = getLogger(__name__)
@@ -35,8 +41,8 @@ def pgvector_journal_retriever(pgvector_document_service):
     # use a low-cost Claude model for integ testing
     llm = ChatBedrock(
         client=get_bedrock_client_from_environ(),
-        # model_id="anthropic.claude-3-haiku-20240307-v1:0",
-        model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+        # model="anthropic.claude-3-haiku-20240307-v1:0",
+        model="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
         model_kwargs={
             "temperature": 0.5,
         },

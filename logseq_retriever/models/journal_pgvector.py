@@ -35,7 +35,8 @@ class JournalCorpusMetadata(BaseDocumentMetadata):
 
     # corpus
     date_str: str = Field(
-        pattern=r"^\d{4}-\d{2}-\d{2}$", description="Date in ISO format, e.g. `2025-04-20`"
+        pattern=r"^\d{4}-\d{2}-\d{2}$",
+        description="Date in ISO format, e.g. `2025-04-20`",
     )
 
     # defaults
@@ -93,7 +94,9 @@ class JournalSearchQuery(SearchQuery):
 
     metadata_filters: list[MetadataFilter] = Field(
         default=[],
-        json_schema_extra={"metadata_schema": JournalDocumentMetadata.model_json_schema()},
+        json_schema_extra={
+            "metadata_schema": JournalDocumentMetadata.model_json_schema()
+        },
     )
     """
     List of metadata conditions that must be matched.

@@ -1,14 +1,14 @@
+from collections.abc import Sequence
 from logging import getLogger
-from typing import TypeVar
 
 from langchain_core.messages import BaseMessage
 from langchain_core.documents import Document
-from pgvector_template.core import SearchQuery
+from pgvector_template.core.search import SearchQuery
 from pgvector_template.service import DocumentService
 
-from langchain_logseq.retrievers.contextualizer import RetrieverContextualizer
-from langchain_logseq.retrievers.journal_retriever import LogseqJournalRetriever
-from langchain_logseq.models.journal_pgvector import JournalDocument
+from logseq_retriever.retrievers.contextualizer import RetrieverContextualizer
+from logseq_retriever.retrievers.journal_retriever import LogseqJournalRetriever
+from logseq_retriever.models.journal_pgvector import JournalDocument
 
 
 logger = getLogger(__name__)
@@ -32,9 +32,13 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
         super().__init__()
 
         if not isinstance(contextualizer, RetrieverContextualizer):
-            raise TypeError("contextualizer must be an instance of RetrieverContextualizer")
+            raise TypeError(
+                "contextualizer must be an instance of RetrieverContextualizer"
+            )
         if not issubclass(contextualizer._output_type, SearchQuery):
-            raise TypeError("contextualizer._output_type must be SearchQuery or a subclass")
+            raise TypeError(
+                "contextualizer._output_type must be SearchQuery or a subclass"
+            )
         self._contextualizer = contextualizer
 
         if not isinstance(document_service, DocumentService):
@@ -45,7 +49,7 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
     def _build_loader_input(
         self,
         query: str,
-        chat_history: list[BaseMessage] = [],
+        chat_history: Sequence[BaseMessage] = (),
     ) -> SearchQuery:
         """
         Based on the natural-language `query`, return an instance of `SearchQuery`,
@@ -60,7 +64,9 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
         if self._verbose:
             logger.info(f"Contextualizer output: {db_query}")
         if not isinstance(db_query, SearchQuery):
-            raise TypeError(f"Expected SearchQuery or subclass but got {type(db_query).__name__}")
+            raise TypeError(
+                f"Expected SearchQuery or subclass but got {type(db_query).__name__}"
+            )
         return db_query
 
     def _fetch_documents(self, loader_input: SearchQuery) -> list[Document]:
@@ -84,6 +90,6 @@ class PGVectorJournalRetriever(LogseqJournalRetriever):
         Build a LangChain document from a PGVector document.
         """
         return Document(
-            page_content=pgvector_document.content,
+            page_content=str(pgvector_document.content),
             metadata=pgvector_document.document_metadata,
         )

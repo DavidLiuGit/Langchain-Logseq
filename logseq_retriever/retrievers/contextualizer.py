@@ -98,7 +98,9 @@ class RetrieverContextualizer(Runnable):
         self.chain = self._generate_chain()
         self._parser_type = self.parser._type
         self._output_type = (
-            self.parser.OutputType if not self.props.output_schema else self.props.output_schema
+            self.parser.OutputType
+            if not self.props.output_schema
+            else self.props.output_schema
         )
 
     def _generate_chain(self) -> Runnable:

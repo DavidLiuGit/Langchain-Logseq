@@ -1,0 +1,104 @@
+stages:
+  - lint
+  - test
+  - review
+
+default:
+  interruptible: true
+
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+variables:
+  SECRET_DETECTION_ENABLED: 'true'
+
+
+# ── Anchors ───────────────────────────────────────────────────────────────────
+.install: &install
+  image: python:3.11-slim
+  before_script:
+    - pip install --no-cache-dir -e ".[test]"
+
+.on_mr: &on_mr
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+.on_mr_or_develop: &on_mr_or_develop
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+.on_mr_to_main: &on_mr_to_main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
+
+# ── Lint ──────────────────────────────────────────────────────────────────────
+lint:ruff-check:
+  stage: lint
+  <<: [*install, *on_mr]
+  script:
+    - ruff check .
+
+lint:ruff-format:
+  stage: lint
+  <<: [*install, *on_mr]
+  script:
+    - ruff format --check .
+
+lint:ty:
+  stage: lint
+  <<: [*install, *on_mr]
+  script:
+    - ty check .
+
+lint:version-bump:
+  stage: lint
+  image: python:3.11
+  <<: *on_mr_to_main
+  before_script:
+    - git fetch origin main
+  script:
+    - |
+      MAIN_VERSION=$(git show origin/main:pyproject.toml | python3 -c "import sys, tomllib; print(tomllib.loads(sys.stdin.read())['project']['version'])")
+      THIS_VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+      echo "main: $MAIN_VERSION  this MR: $THIS_VERSION"
+      if [ "$MAIN_VERSION" = "$THIS_VERSION" ]; then
+        echo "ERROR: pyproject.toml version must be bumped before merging to main"
+        exit 1
+      fi
+
+
+# ── Test ──────────────────────────────────────────────────────────────────────
+test:unit:
+  stage: test
+  <<: [*install, *on_mr_or_develop]
+  script:
+    - pytest tests/ -p no:cacheprovider
+
+sast:
+  stage: test
+
+secret_detection:
+  stage: test
+
+
+# ── Review ────────────────────────────────────────────────────────────────────
+vibe-check:
+  stage: review
+  image: registry.gitlab.com/bestie-bot/vibe-check:latest
+  <<: *on_mr
+  variables:
+    GIT_STRATEGY: fetch
+    CLAUDE_THINKING_EFFORT: medium
+  script:
+    - vibe-check

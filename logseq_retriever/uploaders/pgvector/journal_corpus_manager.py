@@ -7,9 +7,11 @@ from pgvector_template.core import (
     BaseDocument,
     BaseDocumentMetadata,
 )
-from pydantic import Field
 
-from langchain_logseq.models.journal_pgvector import JournalDocument, JournalDocumentMetadata
+from logseq_retriever.models.journal_pgvector import (
+    JournalDocument,
+    JournalDocumentMetadata,
+)
 
 
 class JournalCorpusManagerConfig(BaseCorpusManagerConfig):
@@ -67,5 +69,4 @@ class JournalCorpusManager(BaseCorpusManager):
 
     def _extract_anchor_ids(self, content: str) -> list[str]:
         """Extract Logseq anchor IDs from content (id:: <uuid>)"""
-
         return re.findall(r"id:: ([a-f0-9-]{36})", content)

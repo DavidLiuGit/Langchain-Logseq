@@ -19,6 +19,6 @@ PYTHONPATH=. python integ-tests/test_integ_journal_date_range_retriever.py
 To run all integration tests, from project root dir:
 ```bash
 pytest -v --log-cli-level=INFO \
-  --cov=langchain_logseq integ-tests/ \
+  --cov=logseq_retriever integ-tests/ \
   --cov-report=xml --cov-report=html --cov-report=term
 ```

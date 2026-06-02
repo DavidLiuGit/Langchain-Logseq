@@ -3,16 +3,16 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "langchain-logseq"
-version = "0.3.2"
-description = "LangChain helpers for working with Logseq documents"
+name = "logseq-retriever"
+version = "0.4"
+description = "Python library for loading and retrieving Logseq documents"
 authors = [{ name="DL", email="v49t9zpqd@mozmail.com" }]
 license = { text = "MIT" }
 dependencies = [
     "langchain>=0.3.24,<0.4.0",
     "pydantic>=2.11,<3.0",
 
-    "pgvector-template>=0.3.1",
+    "pgvector-template>=0.3.4",
 ]
 readme = "README.md"
 requires-python = ">=3.11"
@@ -36,12 +36,21 @@ test = [
   "boto3-stubs",
   "langchain-aws>=0.2.0",
   "psycopg[binary]>=3.0.0",
+  "ty",
+  "ruff",
+]
+dist = [
+  "build>=1.2.2",
+  "twine>=6.1.0",
 ]
 
 [tool.setuptools.packages.find]
 where = ["."]  # Look for packages in the root directory
-include = ["langchain_logseq*"]  # Include all packages starting with langchain_logseq
+include = ["logseq_retriever*"]  # Include all packages starting with logseq_retriever
 
+
+[tool.ty.src]
+exclude = ["scripts/"]
 
 [tool.black]
 line-length = 120
