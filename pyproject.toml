@@ -4,12 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "logseq-retriever"
-version = "0.4.1"
+version = "0.4.2"
 description = "Python library for loading and retrieving Logseq documents"
 authors = [{ name="DL", email="v49t9zpqd@mozmail.com" }]
 license = { text = "MIT" }
 dependencies = [
-    "langchain>=0.3.24,<0.4.0",
     "pydantic>=2.11,<3.0",
 
     "pgvector-template>=0.3.4",
@@ -26,7 +25,7 @@ classifiers = [
 scripts = [
   "python-dotenv",
   "psycopg2-binary>=2.9.0",
-  "langchain-aws>=0.2.0",
+  "boto3",
 ]
 test = [
   "pytest",
@@ -34,7 +33,6 @@ test = [
   "python-dotenv",
   "boto3",
   "boto3-stubs",
-  "langchain-aws>=0.2.0",
   "psycopg[binary]>=3.0.0",
   "ty",
   "ruff",

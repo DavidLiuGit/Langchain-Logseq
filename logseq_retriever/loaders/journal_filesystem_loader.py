@@ -2,7 +2,7 @@ from datetime import date, datetime
 from logging import getLogger
 from pathlib import Path
 
-from langchain_core.documents import Document
+from logseq_retriever.models.document import Document
 from logseq_retriever.loaders.journal_loader import LogseqJournalLoader
 from logseq_retriever.loaders.journal_loader_input import LogseqJournalLoaderInput
 from logseq_retriever.loaders.journal_document_metadata import (

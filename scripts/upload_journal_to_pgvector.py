@@ -4,7 +4,7 @@ from datetime import datetime
 from logging import getLogger
 from pathlib import Path
 
-from langchain_core.documents import Document as LangchainDocument
+from logseq_retriever.models.document import Document
 from pgvector_template.db import DocumentDatabaseManager
 from pgvector_template.core import BaseDocumentOptionalProps
 
@@ -133,7 +133,7 @@ def main():
             max_char_length=64 * 1024,
             enable_splitting=False,  # disable splitting; let JournalCorpusManager handle splitting
         )
-        filesystem_docs: list[LangchainDocument] = loader.load(loader_input)
+        filesystem_docs: list[Document] = loader.load(loader_input)
 
         # process documents from the filesystem for upload
         collection_name = (
