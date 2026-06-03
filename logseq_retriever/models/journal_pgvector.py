@@ -38,10 +38,13 @@ class JournalCorpusMetadata(BaseDocumentMetadata):
         pattern=r"^\d{4}-\d{2}-\d{2}$",
         description="Date in ISO format, e.g. `2025-04-20`",
     )
+    embedding_model: str = Field(
+        description="Bedrock model ID used to generate the embedding, e.g. cohere.embed-v4:0"
+    )
 
     # defaults
     document_type: str = Field(default="logseq_journal")
-    schema_version: str = Field(default="2025-07-10")
+    schema_version: str = Field(default="2026-06-02")
 
 
 class JournalDocumentMetadata(JournalCorpusMetadata):
