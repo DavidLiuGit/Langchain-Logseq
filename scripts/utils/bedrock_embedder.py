@@ -1,4 +1,5 @@
 import json
+from abc import abstractmethod
 from typing import Any
 
 from pgvector_template.core.embedder import BaseEmbeddingProvider
@@ -7,30 +8,28 @@ from utils.api_bedrock import get_bedrock_client_from_environ
 
 
 class BedrockEmbeddingProvider(BaseEmbeddingProvider):
-    """Embedding provider for Amazon Bedrock Titan embedding models.
+    """Abstract base for Bedrock embedding providers. Handles client setup and shared embed logic."""
 
-    Only supports Titan models (amazon.titan-embed-*). The request payload and
-    response parsing are hard-coded to the Titan API shape ({\"inputText\": ...},
-    response[\"embedding\"]). Passing a non-Titan model_id will produce a bad
-    request or a KeyError at runtime.
-    """
-
-    def __init__(
-        self, model_id: str = "amazon.titan-embed-text-v2:0", verbose=False, **kwargs
-    ):
+    def __init__(self, model_id: str, verbose: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.model_id = model_id
         self.verbose = verbose
         self.bedrock_client: Any = get_bedrock_client_from_environ()
 
+    @abstractmethod
+    def _build_payload(self, text: str) -> dict: ...
+
+    @abstractmethod
+    def _parse_response(self, response: dict) -> list[float]: ...
+
     def _invoke(self, text: str) -> list[float]:
         response = self.bedrock_client.invoke_model(
             modelId=self.model_id,
-            body=json.dumps({"inputText": text}),
+            body=json.dumps(self._build_payload(text)),
             contentType="application/json",
             accept="application/json",
         )
-        return json.loads(response["body"].read())["embedding"]
+        return self._parse_response(json.loads(response["body"].read()))
 
     def embed_text(self, text: str) -> list[float]:
         vector = self._invoke(text)
@@ -47,3 +46,48 @@ class BedrockEmbeddingProvider(BaseEmbeddingProvider):
 
     def get_dimensions(self) -> int:
         return 1024
+
+
+class TitanEmbeddingProvider(BedrockEmbeddingProvider):
+    """Embedding provider for Amazon Titan models (amazon.titan-embed-*).
+
+    Only supports Titan models — payload shape and response parsing are
+    hard-coded to the Titan API. Kept as a legacy fallback; prefer CohereEmbeddingProvider.
+    """
+
+    def __init__(self, model_id: str = "amazon.titan-embed-text-v2:0", **kwargs):
+        super().__init__(model_id=model_id, **kwargs)
+
+    def _build_payload(self, text: str) -> dict:
+        return {"inputText": text}
+
+    def _parse_response(self, response: dict) -> list[float]:
+        return response["embedding"]
+
+
+class CohereEmbeddingProvider(BedrockEmbeddingProvider):
+    """Embedding provider for Cohere Embed v4 (cohere.embed-v4:0).
+
+    Supports input_type separation: use "search_document" when embedding corpus
+    content (upload pipeline), and "search_query" when embedding user queries
+    (retrieval side in logseq-mcp).
+    """
+
+    def __init__(
+        self,
+        model_id: str = "cohere.embed-v4:0",
+        input_type: str = "search_document",
+        **kwargs,
+    ):
+        super().__init__(model_id=model_id, **kwargs)
+        self.input_type = input_type
+
+    def _build_payload(self, text: str) -> dict:
+        return {
+            "texts": [text],
+            "input_type": self.input_type,
+            "embedding_types": ["float"],
+        }
+
+    def _parse_response(self, response: dict) -> list[float]:
+        return response["embeddings"]["float"][0]
