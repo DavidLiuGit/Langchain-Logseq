@@ -11,8 +11,7 @@ class BedrockEmbeddingProvider(BaseEmbeddingProvider):
     """Abstract base for Bedrock embedding providers. Handles client setup and shared embed logic."""
 
     def __init__(self, model_id: str, verbose: bool = False, **kwargs):
-        super().__init__(**kwargs)
-        self.model_id = model_id
+        super().__init__(model_id=model_id, **kwargs)
         self.verbose = verbose
         self.bedrock_client: Any = get_bedrock_client_from_environ()
 
@@ -81,6 +80,9 @@ class CohereEmbeddingProvider(BedrockEmbeddingProvider):
     ):
         super().__init__(model_id=model_id, **kwargs)
         self.input_type = input_type
+
+    def get_embedding_config(self) -> dict:
+        return {"model": self.model_id, "input_type": self.input_type}
 
     def _build_payload(self, text: str) -> dict:
         return {

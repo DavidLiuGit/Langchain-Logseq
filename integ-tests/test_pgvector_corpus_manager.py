@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock
 from pgvector_template.core.document import BaseDocumentOptionalProps
-from utils.bedrock_embedder import BedrockEmbeddingProvider
+from utils.bedrock_embedder import CohereEmbeddingProvider
 from logseq_retriever.uploaders.pgvector.journal_corpus_manager import (
     JournalCorpusManager,
     JournalCorpusManagerConfig,
@@ -11,7 +11,7 @@ from logseq_retriever.uploaders.pgvector.journal_corpus_manager import (
 @pytest.fixture
 def corpus_manager():
     mock_session = Mock()
-    embedding_provider = BedrockEmbeddingProvider(verbose=True)
+    embedding_provider = CohereEmbeddingProvider(verbose=True)
     config = JournalCorpusManagerConfig(embedding_provider=embedding_provider)
     return JournalCorpusManager(mock_session, config)
 

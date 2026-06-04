@@ -21,7 +21,7 @@ from logseq_retriever.uploaders.pgvector import (
     JournalCorpusManagerConfig,
 )
 from pgvector_utils.db_util import database_url
-from utils.bedrock_embedder import BedrockEmbeddingProvider
+from utils.bedrock_embedder import CohereEmbeddingProvider
 from utils.logging import setup_logging
 from dotenv import load_dotenv
 
@@ -116,7 +116,7 @@ def main():
     loader = setup_journal_filesystem_loader(args)
     db_manager = DocumentDatabaseManager(db_url, "logseq", [JournalDocument])
     temp_schema_name = db_manager.setup()
-    embedder = BedrockEmbeddingProvider()
+    embedder = CohereEmbeddingProvider()
 
     with db_manager.get_session() as session:
         corpus_manager = JournalCorpusManager(
