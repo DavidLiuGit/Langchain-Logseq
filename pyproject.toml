@@ -11,7 +11,7 @@ license = { text = "MIT" }
 dependencies = [
     "pydantic>=2.11,<3.0",
 
-    "pgvector-template>=0.3.4",
+    "pgvector-template>=0.4",
 ]
 readme = "README.md"
 requires-python = ">=3.11"
