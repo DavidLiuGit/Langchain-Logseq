@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "logseq-retriever"
-version = "0.4.2"
+version = "0.4.3"
 description = "Python library for loading and retrieving Logseq documents"
 authors = [{ name="DL", email="v49t9zpqd@mozmail.com" }]
 license = { text = "MIT" }
