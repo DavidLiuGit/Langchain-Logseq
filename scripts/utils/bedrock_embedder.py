@@ -1,5 +1,5 @@
 import json
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Any
 
 from pgvector_template.core.embedder import BaseEmbeddingProvider
@@ -7,7 +7,7 @@ from pgvector_template.core.embedder import BaseEmbeddingProvider
 from utils.api_bedrock import get_bedrock_client_from_environ
 
 
-class BedrockEmbeddingProvider(BaseEmbeddingProvider):
+class BedrockEmbeddingProvider(BaseEmbeddingProvider, ABC):
     """Abstract base for Bedrock embedding providers. Handles client setup and shared embed logic."""
 
     def __init__(self, model_id: str, verbose: bool = False, **kwargs):
