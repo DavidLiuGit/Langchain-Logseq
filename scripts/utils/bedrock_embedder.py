@@ -65,7 +65,7 @@ class TitanEmbeddingProvider(BedrockEmbeddingProvider):
 
 
 class CohereEmbeddingProvider(BedrockEmbeddingProvider):
-    """Embedding provider for Cohere Embed v4 (cohere.embed-v4:0).
+    """Embedding provider for Cohere Embed v4 (us.cohere.embed-v4:0).
 
     Supports input_type separation: use "search_document" when embedding corpus
     content (upload pipeline), and "search_query" when embedding user queries
@@ -74,7 +74,7 @@ class CohereEmbeddingProvider(BedrockEmbeddingProvider):
 
     def __init__(
         self,
-        model_id: str = "cohere.embed-v4:0",
+        model_id: str = "us.cohere.embed-v4:0",
         input_type: str = "search_document",
         **kwargs,
     ):
