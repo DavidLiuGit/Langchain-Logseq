@@ -7,21 +7,12 @@ import pytest
 from dotenv import load_dotenv
 from pathlib import Path
 
-# Get the directory where conftest.py is located, and load its .env file
-INTEG_TEST_DIR = Path(__file__).parent.absolute()
-load_dotenv(INTEG_TEST_DIR / ".env")
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 
-# Fixture for database URL - will be implemented by the user
 @pytest.fixture
 def database_url():
-    """Get database URL from environment variables"""
-    username = os.getenv("TEST_PGVECTOR_USERNAME")
-    password = os.getenv("TEST_PGVECTOR_PASSWORD")
-    host = os.getenv("TEST_PGVECTOR_HOST")
-    port = os.getenv("TEST_PGVECTOR_PORT")
-    db = os.getenv("TEST_PGVECTOR_DB")
-    db_url = f"postgresql+psycopg://{username}:{password}@{host}:{port}/{db}"
-    if not db_url:
-        pytest.skip("TEST_DATABASE_URL environment variable not set")
-    return db_url
+    url = os.getenv("TEST_PGVECTOR_URL")
+    if not url:
+        pytest.skip("TEST_PGVECTOR_URL environment variable not set")
+    return url
