@@ -44,7 +44,7 @@ class BedrockEmbeddingProvider(BaseEmbeddingProvider, ABC):
         return vectors
 
     def get_dimensions(self) -> int:
-        return 1024
+        return 1536
 
 
 class TitanEmbeddingProvider(BedrockEmbeddingProvider):

@@ -2,7 +2,7 @@ from typing import Type
 
 from pgvector.sqlalchemy import Vector
 from pydantic import Field
-from sqlalchemy import Column, String
+from sqlalchemy import Column, Index, String, text
 
 from pgvector_template.core import (
     BaseDocument,
@@ -26,8 +26,18 @@ class JournalDocument(BaseDocument):
 
     corpus_id = Column(String(len("2025-06-09")), index=True)
     """Length of ISO date string"""
-    embedding = Column(Vector(1024))
-    """Embedding vector"""
+    embedding = Column(Vector())
+    """Embedding vector — dimensionless to survive future model dim changes"""
+
+    @classmethod
+    def get_embedding_index(cls, table_name: str) -> Index:
+        """HNSW on a cast expression — required for dimensionless vector columns.
+        Update the cast dim here when switching embedding models; no table drop needed."""
+        return Index(
+            f"{table_name}_embedding_hnsw_idx",
+            text("(embedding::vector(1536)) vector_cosine_ops"),
+            postgresql_using="hnsw",
+        )
 
 
 class JournalCorpusMetadata(BaseDocumentMetadata):
