@@ -63,6 +63,9 @@ class TitanEmbeddingProvider(BedrockEmbeddingProvider):
     def _parse_response(self, response: dict) -> list[float]:
         return response["embedding"]
 
+    def get_dimensions(self) -> int:
+        return 1024
+
 
 class CohereEmbeddingProvider(BedrockEmbeddingProvider):
     """Embedding provider for Cohere Embed v4 (us.cohere.embed-v4:0).

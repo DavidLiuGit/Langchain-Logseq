@@ -5,6 +5,7 @@ from logseq_retriever.models.journal_pgvector import (
     JournalSearchClientConfig,
     JournalSearchQuery,
 )
+from pgvector_template.models.search import MetadataFilter
 
 __all__ = [
     "JournalDocument",
@@ -12,4 +13,5 @@ __all__ = [
     "JournalDocumentMetadata",
     "JournalSearchClientConfig",
     "JournalSearchQuery",
+    "MetadataFilter",
 ]
