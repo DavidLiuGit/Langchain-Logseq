@@ -1,7 +1,7 @@
 from typing import Type
 
 from pgvector.sqlalchemy import Vector
-from pydantic import Field
+from pydantic import Field, model_validator
 from sqlalchemy import Column, Index, String, text
 
 from pgvector_template.core import (
@@ -62,7 +62,7 @@ class JournalDocumentMetadata(JournalCorpusMetadata):
     word_count: int | None = Field()
     """Length of the content in words"""
     references: list[str] = Field(default=[])
-    """List of references to other Logseq documents, or journal dates"""
+    """List of `#tag` references extracted from the entry. Note: `[[wiki-link]]` references are not currently captured."""
     anchor_ids: list[str] = Field(default=[])
     """Blocks in the document can have UUID anchors, which are referenced elsewhere. This is a list of all present"""
 
@@ -79,27 +79,50 @@ class JournalSearchClientConfig(BaseSearchClientConfig):
 
 class JournalSearchQuery(SearchQuery):
     """
-    Standardized search query structure, specifically for searching Logseq `JournalDocument`s.
-    At least 1 search criterion is required (text, keywords, metadata_filters), but multiple are allowed.
-    Types are the same as in `SearchQuery`.
-    Descriptions are customized to better suit Logseq `JournalDocument`'s.
+    Search query for Logseq journal entries. At least one criterion is required.
+    All criteria are ANDed: semantic ranking (`text`), substring filter (`keywords`),
+    journal-date bounds (`date_from`/`date_to`), and arbitrary metadata (`metadata_filters`).
+
+    Example — topic search scoped to a date range:
+        text="recovering from a knee injury", date_from=date(2025, 1, 1), date_to=date(2025, 3, 31)
+
+    Example — certain a term appears, scoped to a tag:
+        keywords=["Dr. Lim", "Dr Lim"], metadata_filters=[{field_name="references", condition="contains", value="health"}]
+
+    Example — everything in a month, no semantic query:
+        date_from=date(2025, 5, 1), date_to=date(2025, 5, 31)
     """
 
     text: str | None = None
     """
-    String to match against using in a semantic search, i.e. using vector distance.
-    Instead of passing in a question, rephrase the question to be a string/phrase matching closer
-    to the content expected to be found.
+    Phrase for semantic (vector) similarity search.
+    Rephrase as a statement matching the content you expect to find, not as a question.
+    E.g. "recovering from a knee injury", not "what did I write about my knee?".
     """
 
     keywords: list[str] = []
     """
-    List of keywords to **exact-match**.
-    If any keywords are provided, at least 1 keyword must appear in the content,
-    so use only if certain that the word will appear.
-    Do not include keywords that can be covered in metadata_filters, e.g. dates, document type.
-    If you are not certain that a word will appear, try using `text` for a semantic search instead.
+    Keywords for a case-insensitive **substring** search (SQL `ILIKE '%keyword%'`).
+    An entry matches if **any** keyword appears anywhere in its content (OR-combined).
+    Pass multiple variants, synonyms, or spellings to increase recall — e.g.
+    ["Dr. Lim", "Dr Lim"] matches either form.
+    Note: substring matching means "run" also matches "running"; prefer distinctive terms.
+    Do not use for fields covered by `metadata_filters` or `date_from`/`date_to`.
     """
+
+    date_from: str | None = Field(
+        default=None,
+        pattern=r"^\d{4}-\d{2}-\d{2}$",
+        description=(
+            "Inclusive lower bound on the journal entry's own date (YYYY-MM-DD). "
+            "Filters by the date the entry is *about*, not the database write time."
+        ),
+    )
+    date_to: str | None = Field(
+        default=None,
+        pattern=r"^\d{4}-\d{2}-\d{2}$",
+        description="Inclusive upper bound on the journal entry's own date (YYYY-MM-DD).",
+    )
 
     metadata_filters: list[MetadataFilter] = Field(
         default=[],
@@ -108,9 +131,31 @@ class JournalSearchQuery(SearchQuery):
         },
     )
     """
-    List of metadata conditions that must be matched.
-    Refer to `metadata_schema` for the expected schema, as it exists in the database.
+    List of metadata conditions that must be matched (ANDed together).
+    Refer to `metadata_schema` for the filterable fields and their types.
+    Prefer `date_from`/`date_to` for journal-date filtering over hand-writing date_str filters here.
     """
 
     limit: int = Field(20, ge=3)
     """Maximum number of results to return."""
+
+    @model_validator(mode="after")
+    def _expand_dates_to_metadata_filters(self) -> "JournalSearchQuery":
+        if self.date_from and self.date_to and self.date_from > self.date_to:
+            raise ValueError("date_from must not be after date_to")
+        if self.date_from:
+            self.metadata_filters = list(self.metadata_filters) + [
+                MetadataFilter(field_name="date_str", condition="gte", value=self.date_from)
+            ]
+        if self.date_to:
+            self.metadata_filters = list(self.metadata_filters) + [
+                MetadataFilter(field_name="date_str", condition="lte", value=self.date_to)
+            ]
+        return self
+
+    @model_validator(mode="after")
+    def ensure_criterion(self) -> "JournalSearchQuery":
+        """Override base to also count date_from/date_to as valid criteria."""
+        if not any([self.text, self.keywords, self.metadata_filters, self.date_from, self.date_to]):
+            raise ValueError("At least one search criterion is required")
+        return self
