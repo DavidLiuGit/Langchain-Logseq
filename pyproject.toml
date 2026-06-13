@@ -46,6 +46,10 @@ dist = [
 where = ["."]  # Look for packages in the root directory
 include = ["logseq_retriever*"]  # Include all packages starting with logseq_retriever
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--cov=logseq_retriever --cov-report=term-missing --cov-report=xml"
 
 [tool.ty.src]
 exclude = ["scripts/"]

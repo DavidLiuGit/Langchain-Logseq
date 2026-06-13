@@ -4,6 +4,7 @@ from logseq_retriever.models.journal_pgvector import (
     JournalSearchQuery,
     JournalDocumentMetadata,
 )
+from logseq_retriever.models import MetadataFilter
 
 
 class TestJournalSearchQuery(unittest.TestCase):
@@ -60,6 +61,57 @@ class TestJournalSearchQuery(unittest.TestCase):
         self.assertIn("date_str", required_fields)
         self.assertIn("chunk_len", required_fields)
         self.assertIn("word_count", required_fields)
+
+
+class TestJournalSearchQueryDateFields(unittest.TestCase):
+    def test_date_from_expands_to_gte_filter(self):
+        q = JournalSearchQuery(date_from="2025-01-01")
+        self.assertEqual(len(q.metadata_filters), 1)
+        self.assertEqual(q.metadata_filters[0].field_name, "date_str")
+        self.assertEqual(q.metadata_filters[0].condition, "gte")
+        self.assertEqual(q.metadata_filters[0].value, "2025-01-01")
+
+    def test_date_to_expands_to_lte_filter(self):
+        q = JournalSearchQuery(date_to="2025-03-31")
+        self.assertEqual(len(q.metadata_filters), 1)
+        self.assertEqual(q.metadata_filters[0].condition, "lte")
+        self.assertEqual(q.metadata_filters[0].value, "2025-03-31")
+
+    def test_both_dates_expand_to_two_filters(self):
+        q = JournalSearchQuery(date_from="2025-01-01", date_to="2025-03-31")
+        self.assertEqual(len(q.metadata_filters), 2)
+        conditions = {f.condition for f in q.metadata_filters}
+        self.assertEqual(conditions, {"gte", "lte"})
+
+    def test_date_from_after_date_to_raises(self):
+        with self.assertRaises(ValueError):
+            JournalSearchQuery(date_from="2025-06-01", date_to="2025-01-01")
+
+    def test_date_only_query_is_valid(self):
+        """date_from alone should satisfy ensure_criterion without text/keywords."""
+        q = JournalSearchQuery(date_from="2025-01-01")
+        self.assertIsNotNone(q)
+
+    def test_invalid_date_format_raises(self):
+        with self.assertRaises(ValueError):
+            JournalSearchQuery(date_from="01-01-2025")
+
+    def test_additional_metadata_filters_preserved(self):
+        extra = MetadataFilter(field_name="references", condition="contains", value="health")
+        q = JournalSearchQuery(date_from="2025-01-01", metadata_filters=[extra])
+        self.assertEqual(len(q.metadata_filters), 2)
+        field_names = {f.field_name for f in q.metadata_filters}
+        self.assertIn("date_str", field_names)
+        self.assertIn("references", field_names)
+
+    def test_no_criteria_raises(self):
+        with self.assertRaises(ValueError):
+            JournalSearchQuery(limit=10)  # no text, keywords, dates, or filters
+
+    def test_metadata_filter_re_exported(self):
+        """MetadataFilter should be importable from logseq_retriever.models."""
+        from logseq_retriever.models import MetadataFilter as MF
+        self.assertIs(MF, MetadataFilter)
 
 
 if __name__ == "__main__":
